@@ -230,6 +230,7 @@ Ask me anything about your project, or use quick commands below.`,
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [chatFiles, setChatFiles] = useState<UploadedFile[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
