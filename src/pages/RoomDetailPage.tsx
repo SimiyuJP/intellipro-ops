@@ -17,6 +17,8 @@ function StatusIcon({ status }: { status: string }) {
 export default function RoomDetailPage() {
   const { roomId } = useParams();
   const room = seedProject.rooms.find(r => r.id === roomId);
+  const [updateText, setUpdateText] = useState('');
+  const [updateFiles, setUpdateFiles] = useState<UploadedFile[]>([]);
 
   if (!room) {
     return (
