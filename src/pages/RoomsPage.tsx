@@ -2,20 +2,32 @@ import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/AppLayout';
 import { HealthMeter } from '@/components/HealthMeter';
 import { HealthBadge } from '@/components/HealthBadge';
-import { seedProject } from '@/data/seedProject';
+import { useProject } from '@/contexts/ProjectContext';
 import { Link } from 'react-router-dom';
 
 export default function RoomsPage() {
+  const { activeProject } = useProject();
+
+  if (!activeProject) {
+    return (
+      <AppLayout>
+        <div className="p-6 text-center text-muted-foreground">No project selected. Choose a project from the sidebar.</div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <div className="p-6 max-w-6xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-display font-bold">Rooms</h1>
-          <p className="text-sm text-muted-foreground mt-1">Departmental workspaces with autonomous health tracking</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {activeProject.name} — Departmental workspaces with autonomous health tracking
+          </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {seedProject.rooms.map((room, i) => (
+          {activeProject.rooms.map((room, i) => (
             <motion.div
               key={room.id}
               initial={{ opacity: 0, y: 15 }}

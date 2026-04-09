@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { HealthBadge } from './HealthBadge';
-import { seedProject } from '@/data/seedProject';
+import { ProjectSwitcher } from './ProjectSwitcher';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: '◈' },
@@ -45,12 +44,8 @@ export function AppSidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-border">
-        <div className="text-xs text-muted-foreground font-display mb-2">ACTIVE PROJECT</div>
-        <div className="text-sm text-foreground font-medium truncate">{seedProject.name}</div>
-        <div className="flex items-center gap-2 mt-1">
-          <HealthBadge status={seedProject.healthStatus} label={`${seedProject.healthScore}%`} />
-        </div>
+      <div className="p-3 border-t border-border">
+        <ProjectSwitcher />
       </div>
     </aside>
   );
