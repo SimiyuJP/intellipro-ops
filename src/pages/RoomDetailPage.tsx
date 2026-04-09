@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/AppLayout';
 import { HealthMeter } from '@/components/HealthMeter';
 import { HealthBadge } from '@/components/HealthBadge';
 import { seedProject } from '@/data/seedProject';
+import { FileUpload, UploadedFile } from '@/components/FileUpload';
 
 function StatusIcon({ status }: { status: string }) {
   if (status === 'done') return <span className="text-health-green">✓</span>;
@@ -15,6 +17,8 @@ function StatusIcon({ status }: { status: string }) {
 export default function RoomDetailPage() {
   const { roomId } = useParams();
   const room = seedProject.rooms.find(r => r.id === roomId);
+  const [updateText, setUpdateText] = useState('');
+  const [updateFiles, setUpdateFiles] = useState<UploadedFile[]>([]);
 
   if (!room) {
     return (
@@ -187,6 +191,32 @@ export default function RoomDetailPage() {
             </motion.div>
           </div>
         </div>
+
+        {/* Post Update */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="glass-card p-5"
+        >
+          <h2 className="font-display text-xs text-muted-foreground mb-3 uppercase tracking-wider">Post Update</h2>
+          <textarea
+            value={updateText}
+            onChange={e => setUpdateText(e.target.value)}
+            placeholder="What was done, what's next, what's blocked..."
+            className="command-input w-full p-3 text-sm resize-none h-24 focus:outline-none focus:ring-1 focus:ring-primary/50 font-body mb-3"
+          />
+          <FileUpload files={updateFiles} onFilesChange={setUpdateFiles} compact />
+          <div className="flex justify-end mt-3">
+            <button
+              disabled={!updateText.trim() && updateFiles.length === 0}
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-display text-xs disabled:opacity-50 hover:bg-primary/90 transition-colors"
+              onClick={() => { setUpdateText(''); setUpdateFiles([]); }}
+            >
+              Submit Update
+            </button>
+          </div>
+        </motion.div>
 
         {/* Updates */}
         {room.updates.length > 0 && (

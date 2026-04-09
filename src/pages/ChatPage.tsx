@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/AppLayout';
 import { seedProject } from '@/data/seedProject';
 import { ChatMessage } from '@/types/project';
+import { FileUpload, UploadedFile } from '@/components/FileUpload';
 
 const quickCommands = [
   { cmd: '/status', label: 'Project Status' },
@@ -229,6 +230,7 @@ Ask me anything about your project, or use quick commands below.`,
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [chatFiles, setChatFiles] = useState<UploadedFile[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -347,8 +349,9 @@ Ask me anything about your project, or use quick commands below.`,
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-border shrink-0">
-          <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex gap-2">
+        <div className="p-4 border-t border-border shrink-0 space-y-2">
+          <FileUpload files={chatFiles} onFilesChange={setChatFiles} compact />
+          <form onSubmit={(e) => { e.preventDefault(); handleSend(); setChatFiles([]); }} className="flex gap-2">
             <input
               ref={inputRef}
               value={input}
