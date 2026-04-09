@@ -192,6 +192,32 @@ export default function RoomDetailPage() {
           </div>
         </div>
 
+        {/* Post Update */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="glass-card p-5"
+        >
+          <h2 className="font-display text-xs text-muted-foreground mb-3 uppercase tracking-wider">Post Update</h2>
+          <textarea
+            value={updateText}
+            onChange={e => setUpdateText(e.target.value)}
+            placeholder="What was done, what's next, what's blocked..."
+            className="command-input w-full p-3 text-sm resize-none h-24 focus:outline-none focus:ring-1 focus:ring-primary/50 font-body mb-3"
+          />
+          <FileUpload files={updateFiles} onFilesChange={setUpdateFiles} compact />
+          <div className="flex justify-end mt-3">
+            <button
+              disabled={!updateText.trim() && updateFiles.length === 0}
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-display text-xs disabled:opacity-50 hover:bg-primary/90 transition-colors"
+              onClick={() => { setUpdateText(''); setUpdateFiles([]); }}
+            >
+              Submit Update
+            </button>
+          </div>
+        </motion.div>
+
         {/* Updates */}
         {room.updates.length > 0 && (
           <motion.div

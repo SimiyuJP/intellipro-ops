@@ -72,8 +72,11 @@ export default function BriefPage() {
 Example: Build and launch a new AI SEO performance dashboard for clients. Must integrate Search Console, GA4, and Ahrefs. Launch within 6 weeks..."
               className="w-full h-64 command-input p-4 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/50 font-body"
             />
+            <div className="mt-4">
+              <FileUpload files={briefFiles} onFilesChange={setBriefFiles} maxFiles={5} />
+            </div>
             <div className="flex justify-end mt-4">
-              <Button onClick={handleSubmitBrief} disabled={!brief.trim()} className="font-display">
+              <Button onClick={handleSubmitBrief} disabled={!brief.trim() && briefFiles.length === 0} className="font-display">
                 Analyze Brief →
               </Button>
             </div>

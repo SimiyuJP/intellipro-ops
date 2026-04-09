@@ -349,8 +349,9 @@ Ask me anything about your project, or use quick commands below.`,
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-border shrink-0">
-          <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex gap-2">
+        <div className="p-4 border-t border-border shrink-0 space-y-2">
+          <FileUpload files={chatFiles} onFilesChange={setChatFiles} compact />
+          <form onSubmit={(e) => { e.preventDefault(); handleSend(); setChatFiles([]); }} className="flex gap-2">
             <input
               ref={inputRef}
               value={input}
