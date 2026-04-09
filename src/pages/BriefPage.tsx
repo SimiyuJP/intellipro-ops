@@ -64,21 +64,54 @@ export default function BriefPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="text-2xl font-display font-bold mb-2">New Project</h1>
             <p className="text-sm text-muted-foreground mb-6">
-              Paste your project brief below. AI will analyze it, identify gaps, and generate a complete project structure.
+              Fill in the details below. AI will analyze your brief, identify gaps, and generate a complete project structure.
             </p>
-            <textarea
-              value={brief}
-              onChange={(e) => setBrief(e.target.value)}
-              placeholder="Paste your project brief here...
+
+            <div className="space-y-5">
+              {/* Project Title */}
+              <div>
+                <label className="text-sm font-medium mb-1.5 block font-display">Project Title</label>
+                <input
+                  value={projectTitle}
+                  onChange={(e) => setProjectTitle(e.target.value)}
+                  placeholder="e.g. AI SEO Performance Dashboard"
+                  className="command-input w-full px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 font-body"
+                />
+              </div>
+
+              {/* Success Criteria */}
+              <div>
+                <label className="text-sm font-medium mb-1.5 block font-display">What Does Success Look Like?</label>
+                <textarea
+                  value={successCriteria}
+                  onChange={(e) => setSuccessCriteria(e.target.value)}
+                  placeholder="e.g. Launch to 50 beta users within 6 weeks, achieve 80% daily active usage, integrate all 3 data sources with <2s load time..."
+                  className="w-full h-24 command-input p-4 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/50 font-body"
+                />
+              </div>
+
+              {/* Project Brief */}
+              <div>
+                <label className="text-sm font-medium mb-1.5 block font-display">Project Brief</label>
+                <textarea
+                  value={brief}
+                  onChange={(e) => setBrief(e.target.value)}
+                  placeholder="Paste your full project brief here...
 
 Example: Build and launch a new AI SEO performance dashboard for clients. Must integrate Search Console, GA4, and Ahrefs. Launch within 6 weeks..."
-              className="w-full h-64 command-input p-4 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/50 font-body"
-            />
-            <div className="mt-4">
-              <FileUpload files={briefFiles} onFilesChange={setBriefFiles} maxFiles={5} />
+                  className="w-full h-48 command-input p-4 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/50 font-body"
+                />
+              </div>
+
+              {/* File Upload */}
+              <div>
+                <label className="text-sm font-medium mb-1.5 block font-display">Attachments <span className="text-muted-foreground font-normal">(optional)</span></label>
+                <FileUpload files={briefFiles} onFilesChange={setBriefFiles} maxFiles={5} />
+              </div>
             </div>
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleSubmitBrief} disabled={!brief.trim() && briefFiles.length === 0} className="font-display">
+
+            <div className="flex justify-end mt-6">
+              <Button onClick={handleSubmitBrief} disabled={!projectTitle.trim()} className="font-display">
                 Analyze Brief →
               </Button>
             </div>
