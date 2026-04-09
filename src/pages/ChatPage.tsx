@@ -81,6 +81,35 @@ function generateResponse(input: string, project: Project | null, projects: Proj
     return report;
   }
 
+  if (q === '/confidence' || q.includes('confidence')) {
+    return `**Confidence Scoring — ${project.name}**\n\nHealth ≠ Confidence. Health shows current status. Confidence shows how much we *trust* that status.\n\n${project.rooms.map(r => {
+      const flag = r.healthStatus === 'green' && r.confidence < 60 ? ' ⚠️ GREEN BUT LOW CONFIDENCE' : '';
+      return `**${r.icon} ${r.name}**: Health ${r.healthStatus.toUpperCase()} (${r.healthScore}%) · Confidence **${r.confidence}%**${flag}\n${r.confidenceFactors.map(f => `  → ${f.label}: ${f.score}% — ${f.reason}`).join('\n')}`;
+    }).join('\n\n')}`;
+  }
+
+  if (q === '/decisions' || q.includes('decision') || q.includes('why did we') || q.includes('why are we')) {
+    if (project.decisions.length === 0) return `**${project.name}** — No decisions logged yet.`;
+    return `**Decision Log — ${project.name}** (${project.decisions.length} recorded)\n\n${project.decisions.map(d => {
+      const room = project.rooms.find(r => r.id === d.roomId);
+      return `**${d.title}** [${d.status.toUpperCase()}]\n  Room: ${room?.name} · Decided by: ${d.decidedBy} · Approved by: ${d.approvedBy} · ${d.date}\n  ${d.description}\n  Rejected: ${d.alternativesRejected.join('; ')}\n  Assumptions: ${d.assumptions.join('; ')}`;
+    }).join('\n\n')}`;
+  }
+
+  if (q === '/red-flags' || q.includes('red flag') || q.includes('alert')) {
+    if (project.redFlags.length === 0) return `**${project.name}** — No red flags detected. ✅`;
+    const critical = project.redFlags.filter(f => f.severity === 'critical');
+    const warnings = project.redFlags.filter(f => f.severity === 'warning');
+    return `**🚩 Red Flag Alerts — ${project.name}** (${project.redFlags.length} active)\n\n${critical.length > 0 ? `**CRITICAL (${critical.length}):**\n${critical.map(f => `🔴 ${f.title}\n  ${f.description}`).join('\n\n')}\n\n` : ''}${warnings.length > 0 ? `**WARNINGS (${warnings.length}):**\n${warnings.map(f => `🟡 ${f.title}\n  ${f.description}`).join('\n\n')}` : ''}`;
+  }
+
+  if (q === '/scope-creep' || q.includes('scope')) {
+    if (project.scopeChanges.length === 0) return `**${project.name}** — No scope changes recorded.`;
+    const added = project.scopeChanges.filter(sc => sc.type === 'added');
+    const noTradeoff = added.filter(sc => !sc.hasTradeoff);
+    return `**Scope Creep Analysis — ${project.name}**\n\n**Changes This Period:** ${project.scopeChanges.length} total\n• Added: ${added.length}\n• Removed: ${project.scopeChanges.filter(sc => sc.type === 'removed').length}\n• Modified: ${project.scopeChanges.filter(sc => sc.type === 'modified').length}\n\n${noTradeoff.length > 0 ? `⚠️ **SCOPE CREEP ALERT:** ${noTradeoff.length} item${noTradeoff.length > 1 ? 's' : ''} added without deadline/budget adjustment:\n${noTradeoff.map(sc => `• ${sc.description} — added by ${sc.addedBy} on ${sc.date}`).join('\n')}\n\n` : '✅ All scope changes have recorded tradeoffs.\n\n'}**Full Log:**\n${project.scopeChanges.map(sc => `${sc.type === 'added' ? '+' : sc.type === 'removed' ? '−' : '~'} ${sc.description} (${sc.date})${sc.hasTradeoff ? ` ✓ Tradeoff: ${sc.tradeoffNote}` : ' ⚠ No tradeoff'}`).join('\n')}`;
+  }
+
   if (q === '/next' || q.includes('priorit') || q.includes('next')) {
     const notDone = project.rooms.flatMap(r => r.deliverables).filter(d => d.status !== 'done').sort((a, b) => {
       const p: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
