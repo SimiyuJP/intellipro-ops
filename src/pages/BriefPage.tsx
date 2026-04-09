@@ -24,7 +24,7 @@ export default function BriefPage() {
   const navigate = useNavigate();
 
   const handleSubmitBrief = () => {
-    if (!brief.trim()) return;
+    if (!projectTitle.trim()) return;
     setStep('analyzing');
     setTimeout(() => setStep('clarifications'), 2000);
   };
