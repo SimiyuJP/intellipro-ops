@@ -18,6 +18,7 @@ type Step = 'brief' | 'analyzing' | 'clarifications' | 'generating' | 'review';
 export default function BriefPage() {
   const [step, setStep] = useState<Step>('brief');
   const [brief, setBrief] = useState('');
+  const [briefFiles, setBriefFiles] = useState<UploadedFile[]>([]);
   const navigate = useNavigate();
 
   const handleSubmitBrief = () => {
