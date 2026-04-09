@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/AppLayout';
 import { HealthMeter } from '@/components/HealthMeter';
 import { HealthBadge } from '@/components/HealthBadge';
 import { seedProject } from '@/data/seedProject';
+import { FileUpload, UploadedFile } from '@/components/FileUpload';
 
 function StatusIcon({ status }: { status: string }) {
   if (status === 'done') return <span className="text-health-green">✓</span>;
