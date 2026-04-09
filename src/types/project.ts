@@ -15,6 +15,10 @@ export interface Project {
   deliverables: Deliverable[];
   updates: Update[];
   teamMembers: TeamMember[];
+  decisions: Decision[];
+  meetings: Meeting[];
+  scopeChanges: ScopeChange[];
+  redFlags: RedFlag[];
 }
 
 export interface Room {
@@ -24,12 +28,20 @@ export interface Room {
   objective: string;
   healthScore: number;
   healthStatus: HealthStatus;
+  confidence: number; // 0-100
+  confidenceFactors: ConfidenceFactor[];
   deliverables: Deliverable[];
   milestones: Milestone[];
   blockers: Blocker[];
   teamMembers: TeamMember[];
   updates: Update[];
   recommendations: string[];
+}
+
+export interface ConfidenceFactor {
+  label: string;
+  score: number; // 0-100
+  reason: string;
 }
 
 export interface Deliverable {
@@ -88,4 +100,66 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+}
+
+export interface Decision {
+  id: string;
+  title: string;
+  description: string;
+  decidedBy: string;
+  approvedBy: string;
+  date: string;
+  roomId: string;
+  alternativesRejected: string[];
+  assumptions: string[];
+  status: 'active' | 'revisited' | 'reversed';
+}
+
+export interface Meeting {
+  id: string;
+  title: string;
+  date: string;
+  status: 'upcoming' | 'completed';
+  roomIds: string[];
+  attendees: string[];
+  agenda: MeetingAgendaItem[];
+  minutes?: string;
+  actionItems: ActionItem[];
+}
+
+export interface MeetingAgendaItem {
+  topic: string;
+  source: 'blocker' | 'overdue' | 'decision' | 'custom';
+  sourceId?: string;
+  duration: number; // minutes
+}
+
+export interface ActionItem {
+  id: string;
+  title: string;
+  owner: string;
+  dueDate: string;
+  status: 'pending' | 'done';
+}
+
+export interface ScopeChange {
+  id: string;
+  type: 'added' | 'removed' | 'modified';
+  description: string;
+  itemType: 'deliverable' | 'milestone' | 'room';
+  date: string;
+  addedBy: string;
+  hasTradeoff: boolean;
+  tradeoffNote?: string;
+}
+
+export interface RedFlag {
+  id: string;
+  type: 'stale_room' | 'slipping_milestone' | 'unresolved_blocker' | 'missing_owner' | 'scope_creep' | 'overloaded_member';
+  severity: 'critical' | 'warning' | 'info';
+  title: string;
+  description: string;
+  roomId?: string;
+  detectedAt: string;
+  acknowledged: boolean;
 }
