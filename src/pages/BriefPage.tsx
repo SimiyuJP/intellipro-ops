@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { FileUpload, UploadedFile } from '@/components/FileUpload';
 
 const clarificationQuestions = [
   'What does success look like for this project? (KPIs, metrics)',
