@@ -57,6 +57,38 @@ export default function RoomDetailPage() {
           <HealthMeter score={room.healthScore} status={room.healthStatus} size="md" />
         </div>
 
+        {/* Confidence Scoring */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <h2 className="font-display text-xs text-muted-foreground uppercase tracking-wider">Confidence Score</h2>
+            <span className={`text-lg font-display font-bold ${
+              room.confidence >= 70 ? 'text-health-green' :
+              room.confidence >= 40 ? 'text-health-yellow' : 'text-health-red'
+            }`}>{room.confidence}%</span>
+            {room.healthStatus === 'green' && room.confidence < 60 && (
+              <span className="text-[10px] font-display text-health-yellow bg-health-yellow/10 px-2 py-0.5 rounded">
+                GREEN but LOW CONFIDENCE — assumptions not validated
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            {room.confidenceFactors.map((f, i) => (
+              <div key={i} className="bg-secondary/20 rounded p-2">
+                <div className="text-[10px] font-display text-muted-foreground mb-1">{f.label}</div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${
+                      f.score >= 70 ? 'bg-health-green' : f.score >= 40 ? 'bg-health-yellow' : 'bg-health-red'
+                    }`} style={{ width: `${f.score}%` }} />
+                  </div>
+                  <span className="text-[10px] font-display">{f.score}%</span>
+                </div>
+                <div className="text-[9px] text-muted-foreground mt-1">{f.reason}</div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
         <div className="grid grid-cols-12 gap-4">
           {/* Deliverables */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="col-span-8 glass-card p-5">

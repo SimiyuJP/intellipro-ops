@@ -1,4 +1,5 @@
 import { Project } from '@/types/project';
+import { seoDecisions, seoMeetings, seoScopeChanges, seoRedFlags } from './seedDecisions';
 
 export const seedProject: Project = {
   id: 'proj-001',
@@ -9,6 +10,10 @@ export const seedProject: Project = {
   createdAt: '2026-03-25',
   deadline: '2026-05-06',
   budget: '$15,000',
+  decisions: seoDecisions,
+  meetings: seoMeetings,
+  scopeChanges: seoScopeChanges,
+  redFlags: seoRedFlags,
   teamMembers: [
     { id: 'tm-1', name: 'Alex Chen', role: 'Tech Lead', roomIds: ['room-tech'], lastUpdate: '2026-04-02' },
     { id: 'tm-2', name: 'Sarah Kim', role: 'Frontend Developer', roomIds: ['room-tech'], lastUpdate: '2026-04-07' },
@@ -24,6 +29,13 @@ export const seedProject: Project = {
       objective: 'Build the AI SEO dashboard with Search Console, GA4, and Ahrefs integrations',
       healthScore: 45,
       healthStatus: 'red',
+      confidence: 38,
+      confidenceFactors: [
+        { label: 'Update Frequency', score: 30, reason: 'Tech Lead hasn\'t updated in 7 days' },
+        { label: 'Dependency Stability', score: 25, reason: '2 critical dependencies blocked' },
+        { label: 'Clarity', score: 55, reason: 'Requirements clear but execution uncertain' },
+        { label: 'Unknowns', score: 40, reason: 'AI Insights Engine has no owner or spec' },
+      ],
       deliverables: [
         { id: 'd-1', title: 'Search Console API Integration', description: 'Connect and pull data from Google Search Console', status: 'in_progress', owner: 'Alex Chen', dueDate: '2026-04-10', priority: 'critical', roomId: 'room-tech', dependencies: [], estimatedEffort: '5 days' },
         { id: 'd-2', title: 'GA4 Data Pipeline', description: 'Build data pipeline for GA4 analytics data', status: 'not_started', owner: 'Alex Chen', dueDate: '2026-04-08', priority: 'critical', roomId: 'room-tech', dependencies: [], estimatedEffort: '4 days' },
@@ -61,6 +73,13 @@ export const seedProject: Project = {
       objective: 'Create product positioning, landing page, and launch strategy',
       healthScore: 78,
       healthStatus: 'green',
+      confidence: 72,
+      confidenceFactors: [
+        { label: 'Update Frequency', score: 80, reason: 'Updates within last 3 days' },
+        { label: 'Dependency Stability', score: 60, reason: 'Depends on Tech for screenshots' },
+        { label: 'Clarity', score: 85, reason: 'Clear deliverables and owner' },
+        { label: 'Unknowns', score: 65, reason: 'Landing page design depends on brand assets' },
+      ],
       deliverables: [
         { id: 'd-6', title: 'Product Positioning Document', description: 'Define value props, messaging framework, and competitive positioning', status: 'in_progress', owner: 'Jordan Blake', dueDate: '2026-04-11', priority: 'critical', roomId: 'room-marketing', dependencies: ['d-8'], estimatedEffort: '3 days' },
         { id: 'd-7', title: 'Landing Page Copy & Design', description: 'Write and design the marketing landing page', status: 'not_started', owner: 'Jordan Blake', dueDate: '2026-04-18', priority: 'high', roomId: 'room-marketing', dependencies: ['d-6'], estimatedEffort: '4 days' },
@@ -90,6 +109,13 @@ export const seedProject: Project = {
       objective: 'Conduct user research and validate product-market fit',
       healthScore: 70,
       healthStatus: 'yellow',
+      confidence: 58,
+      confidenceFactors: [
+        { label: 'Update Frequency', score: 65, reason: 'Last update 4 days ago' },
+        { label: 'Dependency Stability', score: 50, reason: 'Blocked on customer list access' },
+        { label: 'Clarity', score: 70, reason: 'Clear methodology but incomplete data' },
+        { label: 'Unknowns', score: 45, reason: 'Only 30% of interviews completed' },
+      ],
       deliverables: [
         { id: 'd-9', title: 'User Needs Assessment', description: 'Interview 10 marketing managers about SEO dashboard pain points', status: 'in_progress', owner: 'Priya Patel', dueDate: '2026-04-15', priority: 'high', roomId: 'room-research', dependencies: [], estimatedEffort: '5 days' },
         { id: 'd-10', title: 'Market Size Analysis', description: 'Estimate TAM/SAM/SOM for AI SEO tools market', status: 'not_started', owner: 'Priya Patel', dueDate: '2026-04-20', priority: 'medium', roomId: 'room-research', dependencies: [], estimatedEffort: '3 days' },
@@ -119,6 +145,13 @@ export const seedProject: Project = {
       objective: 'Prepare internal training docs and client onboarding flow',
       healthScore: 55,
       healthStatus: 'yellow',
+      confidence: 25,
+      confidenceFactors: [
+        { label: 'Update Frequency', score: 0, reason: 'No updates ever logged' },
+        { label: 'Dependency Stability', score: 40, reason: 'Depends on Dashboard completion' },
+        { label: 'Clarity', score: 50, reason: 'Deliverables defined but no owner' },
+        { label: 'Unknowns', score: 10, reason: 'No team member, no plan, no progress' },
+      ],
       deliverables: [
         { id: 'd-11', title: 'Internal Training Documentation', description: 'Create training guide for support team', status: 'not_started', owner: 'Unassigned', dueDate: '2026-04-28', priority: 'medium', roomId: 'room-ops', dependencies: ['d-4'], estimatedEffort: '4 days' },
         { id: 'd-12', title: 'Client Onboarding Flow', description: 'Design step-by-step onboarding for new dashboard users', status: 'not_started', owner: 'Unassigned', dueDate: '2026-04-30', priority: 'medium', roomId: 'room-ops', dependencies: ['d-4'], estimatedEffort: '3 days' },
@@ -144,6 +177,13 @@ export const seedProject: Project = {
       objective: 'Create UI/UX for the dashboard and marketing materials',
       healthScore: 60,
       healthStatus: 'yellow',
+      confidence: 20,
+      confidenceFactors: [
+        { label: 'Update Frequency', score: 0, reason: 'No updates ever logged' },
+        { label: 'Dependency Stability', score: 30, reason: 'Brand assets overdue' },
+        { label: 'Clarity', score: 45, reason: 'Deliverables defined but no spec' },
+        { label: 'Unknowns', score: 5, reason: 'No designer hired, complete uncertainty' },
+      ],
       deliverables: [
         { id: 'd-13', title: 'Dashboard UI Design', description: 'Create high-fidelity mockups for all dashboard views', status: 'in_progress', owner: 'Unassigned', dueDate: '2026-04-14', priority: 'critical', roomId: 'room-design', dependencies: [], estimatedEffort: '5 days' },
         { id: 'd-14', title: 'Brand Assets Package', description: 'Logo, color palette, typography, icon set', status: 'not_started', owner: 'Unassigned', dueDate: '2026-04-10', priority: 'high', roomId: 'room-design', dependencies: [], estimatedEffort: '3 days' },

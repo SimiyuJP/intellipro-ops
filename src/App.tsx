@@ -10,6 +10,9 @@ import RoomsPage from "./pages/RoomsPage";
 import RoomDetailPage from "./pages/RoomDetailPage";
 import ChatPage from "./pages/ChatPage";
 import BriefPage from "./pages/BriefPage";
+import DecisionsPage from "./pages/DecisionsPage";
+import MeetingsPage from "./pages/MeetingsPage";
+import AlertsPage from "./pages/AlertsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +31,9 @@ const App = () => (
             <Route path="/rooms/:roomId" element={<RoomDetailPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/brief" element={<BriefPage />} />
+            <Route path="/decisions" element={<DecisionsPage />} />
+            <Route path="/meetings" element={<MeetingsPage />} />
+            <Route path="/alerts" element={<AlertsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

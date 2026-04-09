@@ -1,4 +1,5 @@
 import { Project } from '@/types/project';
+import { brandingDecisions, brandingMeetings, brandingScopeChanges, brandingRedFlags } from './seedDecisions';
 
 export const seedBrandingProject: Project = {
   id: 'proj-002',
@@ -9,6 +10,10 @@ export const seedBrandingProject: Project = {
   createdAt: '2026-03-20',
   deadline: '2026-04-20',
   budget: '$8,000',
+  decisions: brandingDecisions,
+  meetings: brandingMeetings,
+  scopeChanges: brandingScopeChanges,
+  redFlags: brandingRedFlags,
   teamMembers: [
     { id: 'tm-b1', name: 'Amara Osei', role: 'Creative Director', roomIds: ['room-brand-design', 'room-brand-strategy'], lastUpdate: '2026-04-07' },
     { id: 'tm-b2', name: 'David Mensah', role: 'Graphic Designer', roomIds: ['room-brand-design'], lastUpdate: '2026-04-06' },
@@ -23,6 +28,13 @@ export const seedBrandingProject: Project = {
       objective: 'Create the full visual identity system including logo, color palette, typography, and icon set',
       healthScore: 80,
       healthStatus: 'green',
+      confidence: 85,
+      confidenceFactors: [
+        { label: 'Update Frequency', score: 90, reason: 'Updates within last 2 days' },
+        { label: 'Dependency Stability', score: 95, reason: 'No blocked dependencies' },
+        { label: 'Clarity', score: 80, reason: 'Clear deliverables, strong ownership' },
+        { label: 'Unknowns', score: 75, reason: 'Icon set scope not fully defined' },
+      ],
       deliverables: [
         { id: 'bd-1', title: 'Logo Design (Primary + Variants)', description: 'Design primary logo, monochrome version, favicon, and app icon', status: 'done', owner: 'David Mensah', dueDate: '2026-04-05', priority: 'critical', roomId: 'room-brand-design', dependencies: [], estimatedEffort: '4 days' },
         { id: 'bd-2', title: 'Color Palette & Typography', description: 'Define primary, secondary, and accent colors with typography scale', status: 'done', owner: 'David Mensah', dueDate: '2026-04-07', priority: 'critical', roomId: 'room-brand-design', dependencies: ['bd-1'], estimatedEffort: '2 days' },
@@ -55,6 +67,13 @@ export const seedBrandingProject: Project = {
       objective: 'Define brand positioning, voice, tone, and messaging framework for KijijiPay',
       healthScore: 72,
       healthStatus: 'yellow',
+      confidence: 54,
+      confidenceFactors: [
+        { label: 'Update Frequency', score: 85, reason: 'Updated yesterday' },
+        { label: 'Dependency Stability', score: 30, reason: 'CEO feedback blocking progress' },
+        { label: 'Clarity', score: 70, reason: 'Strategy defined but not validated' },
+        { label: 'Unknowns', score: 30, reason: 'Assumptions about market not yet validated' },
+      ],
       deliverables: [
         { id: 'bd-5', title: 'Brand Positioning Statement', description: 'Define KijijiPay\'s unique value proposition and market positioning', status: 'done', owner: 'Fatima Diallo', dueDate: '2026-04-03', priority: 'critical', roomId: 'room-brand-strategy', dependencies: [], estimatedEffort: '3 days' },
         { id: 'bd-6', title: 'Brand Voice & Tone Guide', description: 'Document brand personality, voice characteristics, and tone variations by context', status: 'in_progress', owner: 'Fatima Diallo', dueDate: '2026-04-10', priority: 'high', roomId: 'room-brand-strategy', dependencies: ['bd-5'], estimatedEffort: '2 days' },
@@ -85,6 +104,13 @@ export const seedBrandingProject: Project = {
       objective: 'Produce all marketing collateral, social templates, and launch content',
       healthScore: 60,
       healthStatus: 'yellow',
+      confidence: 35,
+      confidenceFactors: [
+        { label: 'Update Frequency', score: 0, reason: 'No updates ever logged' },
+        { label: 'Dependency Stability', score: 40, reason: 'Blocked on brand guidelines delivery' },
+        { label: 'Clarity', score: 55, reason: 'Deliverables defined but no team' },
+        { label: 'Unknowns', score: 45, reason: 'Email template owner missing' },
+      ],
       deliverables: [
         { id: 'bd-8', title: 'Social Media Templates', description: 'Design templates for Instagram, Twitter, and LinkedIn', status: 'not_started', owner: 'David Mensah', dueDate: '2026-04-16', priority: 'high', roomId: 'room-brand-content', dependencies: ['bd-2', 'bd-3'], estimatedEffort: '3 days' },
         { id: 'bd-9', title: 'Pitch Deck Design', description: 'Redesign investor pitch deck with new brand identity', status: 'not_started', owner: 'Amara Osei', dueDate: '2026-04-18', priority: 'high', roomId: 'room-brand-content', dependencies: ['bd-3'], estimatedEffort: '3 days' },
@@ -111,6 +137,13 @@ export const seedBrandingProject: Project = {
       objective: 'Plan and execute the brand reveal and launch campaign',
       healthScore: 65,
       healthStatus: 'yellow',
+      confidence: 60,
+      confidenceFactors: [
+        { label: 'Update Frequency', score: 85, reason: 'Updated yesterday' },
+        { label: 'Dependency Stability', score: 45, reason: 'Depends on collateral delivery' },
+        { label: 'Clarity', score: 70, reason: 'Campaign plan in progress' },
+        { label: 'Unknowns', score: 40, reason: 'PR contacts not yet confirmed' },
+      ],
       deliverables: [
         { id: 'bd-11', title: 'Launch Campaign Plan', description: 'Detailed plan for brand reveal across channels', status: 'in_progress', owner: 'Kofi Asante', dueDate: '2026-04-14', priority: 'critical', roomId: 'room-brand-launch', dependencies: ['bd-5'], estimatedEffort: '3 days' },
         { id: 'bd-12', title: 'Press Kit', description: 'Media kit with brand story, high-res assets, and key messages', status: 'not_started', owner: 'Fatima Diallo', dueDate: '2026-04-17', priority: 'high', roomId: 'room-brand-launch', dependencies: ['bd-3', 'bd-6'], estimatedEffort: '2 days' },

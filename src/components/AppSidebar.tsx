@@ -4,6 +4,9 @@ import { ProjectSwitcher } from './ProjectSwitcher';
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: '◈' },
   { path: '/rooms', label: 'Rooms', icon: '▦' },
+  { path: '/decisions', label: 'Decisions', icon: '⚖' },
+  { path: '/meetings', label: 'Meetings', icon: '📅' },
+  { path: '/alerts', label: 'Alerts', icon: '🚩' },
   { path: '/chat', label: 'Command', icon: '▸' },
   { path: '/brief', label: 'New Project', icon: '+' },
 ];
