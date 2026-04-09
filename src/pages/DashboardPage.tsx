@@ -25,6 +25,19 @@ function PriorityBadge({ priority }: { priority: string }) {
   );
 }
 
+function ConfidenceBar({ value, label }: { value: number; label: string }) {
+  const color = value >= 70 ? 'bg-health-green' : value >= 40 ? 'bg-health-yellow' : 'bg-health-red';
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-muted-foreground w-20 truncate">{label}</span>
+      <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${value}%` }} />
+      </div>
+      <span className="text-[10px] font-display text-muted-foreground w-8 text-right">{value}%</span>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { activeProject } = useProject();
 
@@ -47,8 +60,8 @@ export default function DashboardPage() {
   const overdue = allDeliverables.filter(d => d.status !== 'done' && new Date(d.dueDate) < new Date());
   const blocked = allDeliverables.filter(d => d.status === 'blocked');
   const criticalPath = allDeliverables.filter(d => d.priority === 'critical' && d.status !== 'done');
+  const criticalRedFlags = project.redFlags.filter(f => f.severity === 'critical');
 
-  // Generate dynamic focus areas and staffing gaps from active project data
   const staffingGaps = project.rooms
     .filter(r => r.teamMembers.length === 0 || r.deliverables.some(d => d.owner === 'Unassigned'))
     .flatMap(r => {
@@ -82,23 +95,47 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Top row: Health + Room health */}
+        {/* Red Flag Banner */}
+        {criticalRedFlags.length > 0 && (
+          <Link to="/alerts">
+            <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="border border-health-red/30 bg-health-red/5 rounded-lg p-3 flex items-center justify-between hover:bg-health-red/10 transition-colors cursor-pointer">
+              <div className="flex items-center gap-2">
+                <span className="text-health-red">🔴</span>
+                <span className="text-sm font-display font-bold text-health-red">{criticalRedFlags.length} Critical Alert{criticalRedFlags.length > 1 ? 's' : ''}</span>
+                <span className="text-sm text-foreground/70">— {criticalRedFlags[0].title}</span>
+              </div>
+              <span className="text-xs text-muted-foreground font-display">VIEW ALL →</span>
+            </motion.div>
+          </Link>
+        )}
+
+        {/* Top row: Health + Room Health + Confidence */}
         <div className="grid grid-cols-12 gap-4">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="col-span-3 glass-card-elevated p-5 flex flex-col items-center justify-center">
             <HealthMeter score={project.healthScore} status={project.healthStatus} size="lg" label="Project Health" />
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="col-span-5 glass-card p-5">
-            <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">Room Health</h2>
+            <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">Room Health + Confidence</h2>
             <div className="space-y-2.5">
               {project.rooms.map(room => (
                 <Link key={room.id} to={`/rooms/${room.id}`} className="flex items-center justify-between hover:bg-secondary/30 p-2 rounded transition-colors -mx-2">
                   <div className="flex items-center gap-3">
                     <span className="text-lg">{room.icon}</span>
-                    <span className="text-sm font-medium">{room.name}</span>
+                    <div>
+                      <span className="text-sm font-medium">{room.name}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`text-[9px] font-display ${
+                          room.confidence >= 70 ? 'text-health-green' :
+                          room.confidence >= 40 ? 'text-health-yellow' : 'text-health-red'
+                        }`}>
+                          {room.confidence}% confidence
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-24 h-1.5 bg-secondary rounded-full overflow-hidden">
+                    <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
                           room.healthStatus === 'green' ? 'bg-health-green' :
@@ -115,7 +152,7 @@ export default function DashboardPage() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="col-span-4 glass-card p-5">
-            <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">⚡ AI Focus Areas This Week</h2>
+            <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">⚡ AI Focus Areas</h2>
             <div className="space-y-2">
               {focusAreas.map((area, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm">
@@ -123,6 +160,20 @@ export default function DashboardPage() {
                   <span className="text-foreground/90">{area}</span>
                 </div>
               ))}
+            </div>
+            {/* Quick links */}
+            <div className="flex gap-2 mt-4 pt-3 border-t border-border/50">
+              <Link to="/decisions" className="text-[10px] font-display text-muted-foreground hover:text-primary transition-colors">
+                {project.decisions.length} Decisions
+              </Link>
+              <span className="text-muted-foreground/30">·</span>
+              <Link to="/meetings" className="text-[10px] font-display text-muted-foreground hover:text-primary transition-colors">
+                {project.meetings.length} Meetings
+              </Link>
+              <span className="text-muted-foreground/30">·</span>
+              <Link to="/alerts" className="text-[10px] font-display text-muted-foreground hover:text-primary transition-colors">
+                {project.redFlags.length} Alerts
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -201,6 +252,37 @@ export default function DashboardPage() {
           </motion.div>
         </div>
 
+        {/* Confidence Overview */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="glass-card p-5">
+          <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">🎯 Confidence Scoring — Beyond Health Status</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            {project.rooms.map(room => {
+              const avgConfidence = room.confidence;
+              return (
+                <Link key={room.id} to={`/rooms/${room.id}`} className="bg-secondary/20 rounded-lg p-3 hover:bg-secondary/30 transition-colors">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span>{room.icon}</span>
+                    <span className="text-sm font-display font-bold">{room.name}</span>
+                    <HealthBadge status={room.healthStatus} label={`${room.healthScore}%`} />
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`text-lg font-display font-bold ${
+                      avgConfidence >= 70 ? 'text-health-green' :
+                      avgConfidence >= 40 ? 'text-health-yellow' : 'text-health-red'
+                    }`}>{avgConfidence}%</span>
+                    <span className="text-xs text-muted-foreground">confidence</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {room.confidenceFactors.map((f, i) => (
+                      <ConfidenceBar key={i} value={f.score} label={f.label} />
+                    ))}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </motion.div>
+
         {/* Bottom row */}
         <div className="grid grid-cols-2 gap-4">
           {staffingGaps.length > 0 && (
@@ -241,10 +323,11 @@ export default function DashboardPage() {
         {/* Critical Path */}
         {criticalPath.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="glass-card p-5">
-            <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">🔥 Critical Path Items</h2>
+            <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">🔥 Critical Path — What Slips If These Slip</h2>
             <div className="grid grid-cols-3 gap-3">
               {criticalPath.map(d => {
                 const room = project.rooms.find(r => r.id === d.roomId);
+                const dependents = allDeliverables.filter(other => other.dependencies.includes(d.id));
                 return (
                   <div key={d.id} className="border border-health-red/20 bg-health-red/5 rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-1">
@@ -257,6 +340,14 @@ export default function DashboardPage() {
                       <StatusIcon status={d.status} />
                       <span className="text-xs text-muted-foreground capitalize">{d.status.replace('_', ' ')}</span>
                     </div>
+                    {dependents.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-health-red/10">
+                        <div className="text-[10px] font-display text-health-red">IF THIS SLIPS →</div>
+                        {dependents.map(dep => (
+                          <div key={dep.id} className="text-[10px] text-muted-foreground mt-0.5">• {dep.title}</div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
