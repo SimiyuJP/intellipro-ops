@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/AppLayout';
 import { seedProject } from '@/data/seedProject';
 import { ChatMessage } from '@/types/project';
+import { FileUpload, UploadedFile } from '@/components/FileUpload';
 
 const quickCommands = [
   { cmd: '/status', label: 'Project Status' },
