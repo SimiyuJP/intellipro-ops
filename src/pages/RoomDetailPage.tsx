@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/AppLayout';
 import { HealthMeter } from '@/components/HealthMeter';
 import { HealthBadge } from '@/components/HealthBadge';
-import { seedProject } from '@/data/seedProject';
+import { useProject } from '@/contexts/ProjectContext';
 import { FileUpload, UploadedFile } from '@/components/FileUpload';
 
 function StatusIcon({ status }: { status: string }) {
@@ -16,14 +16,24 @@ function StatusIcon({ status }: { status: string }) {
 
 export default function RoomDetailPage() {
   const { roomId } = useParams();
-  const room = seedProject.rooms.find(r => r.id === roomId);
+  const { activeProject } = useProject();
   const [updateText, setUpdateText] = useState('');
   const [updateFiles, setUpdateFiles] = useState<UploadedFile[]>([]);
+
+  if (!activeProject) {
+    return (
+      <AppLayout>
+        <div className="p-6 text-center text-muted-foreground">No project selected.</div>
+      </AppLayout>
+    );
+  }
+
+  const room = activeProject.rooms.find(r => r.id === roomId);
 
   if (!room) {
     return (
       <AppLayout>
-        <div className="p-6 text-center text-muted-foreground">Room not found</div>
+        <div className="p-6 text-center text-muted-foreground">Room not found in {activeProject.name}</div>
       </AppLayout>
     );
   }
@@ -49,11 +59,7 @@ export default function RoomDetailPage() {
 
         <div className="grid grid-cols-12 gap-4">
           {/* Deliverables */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="col-span-8 glass-card p-5"
-          >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="col-span-8 glass-card p-5">
             <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">
               Deliverables ({room.deliverables.length})
             </h2>
@@ -70,14 +76,6 @@ export default function RoomDetailPage() {
                         <span>Due: <span className="text-foreground">{d.dueDate}</span></span>
                         <span>Effort: {d.estimatedEffort}</span>
                       </div>
-                      {d.dependencies.length > 0 && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Dependencies: {d.dependencies.map(dep => {
-                            const depD = room.deliverables.find(dd => dd.id === dep);
-                            return depD?.title || dep;
-                          }).join(', ')}
-                        </div>
-                      )}
                     </div>
                   </div>
                   <span className={`text-[10px] font-display px-1.5 py-0.5 rounded capitalize ${
@@ -95,13 +93,7 @@ export default function RoomDetailPage() {
 
           {/* Right sidebar */}
           <div className="col-span-4 space-y-4">
-            {/* Team */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="glass-card p-5"
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-5">
               <h2 className="font-display text-xs text-muted-foreground mb-3 uppercase tracking-wider">Team</h2>
               {room.teamMembers.length === 0 ? (
                 <div className="text-sm text-health-red">⚠ No team members assigned</div>
@@ -113,23 +105,15 @@ export default function RoomDetailPage() {
                         <div className="text-sm">{tm.name}</div>
                         <div className="text-xs text-muted-foreground">{tm.role}</div>
                       </div>
-                      {tm.lastUpdate && (
-                        <div className="text-[10px] text-muted-foreground">{tm.lastUpdate}</div>
-                      )}
+                      {tm.lastUpdate && <div className="text-[10px] text-muted-foreground">{tm.lastUpdate}</div>}
                     </div>
                   ))}
                 </div>
               )}
             </motion.div>
 
-            {/* Blockers */}
             {room.blockers.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="glass-card p-5"
-              >
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-5">
                 <h2 className="font-display text-xs text-muted-foreground mb-3 uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-health-red animate-pulse" />
                   Blockers
@@ -145,13 +129,7 @@ export default function RoomDetailPage() {
               </motion.div>
             )}
 
-            {/* AI Recommendations */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="glass-card p-5 border-primary/20"
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5 border-primary/20">
               <h2 className="font-display text-xs text-primary mb-3 uppercase tracking-wider">⚡ AI Recommendations</h2>
               <div className="space-y-2">
                 {room.recommendations.map((rec, i) => (
@@ -163,13 +141,7 @@ export default function RoomDetailPage() {
               </div>
             </motion.div>
 
-            {/* Milestones */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="glass-card p-5"
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-5">
               <h2 className="font-display text-xs text-muted-foreground mb-3 uppercase tracking-wider">Milestones</h2>
               <div className="space-y-2">
                 {room.milestones.map(m => (
@@ -179,7 +151,7 @@ export default function RoomDetailPage() {
                       <span className="text-xs text-muted-foreground">{m.dueDate}</span>
                       <span className={`text-[10px] font-display px-1.5 py-0.5 rounded ${
                         m.status === 'at_risk' ? 'text-health-red bg-health-red/10' :
-                        m.status === 'on_track' ? 'text-health-green bg-health-green/10' :
+                        m.status === 'on_track' || m.status === 'completed' ? 'text-health-green bg-health-green/10' :
                         'text-muted-foreground bg-muted/50'
                       }`}>
                         {m.status.replace('_', ' ').toUpperCase()}
@@ -193,12 +165,7 @@ export default function RoomDetailPage() {
         </div>
 
         {/* Post Update */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          className="glass-card p-5"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="glass-card p-5">
           <h2 className="font-display text-xs text-muted-foreground mb-3 uppercase tracking-wider">Post Update</h2>
           <textarea
             value={updateText}
@@ -220,12 +187,7 @@ export default function RoomDetailPage() {
 
         {/* Updates */}
         {room.updates.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="glass-card p-5"
-          >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass-card p-5">
             <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">Recent Updates</h2>
             <div className="space-y-4">
               {room.updates.map(u => (

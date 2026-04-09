@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/AppLayout';
-import { seedProject } from '@/data/seedProject';
-import { ChatMessage } from '@/types/project';
+import { useProject } from '@/contexts/ProjectContext';
+import { ChatMessage, Project } from '@/types/project';
 import { FileUpload, UploadedFile } from '@/components/FileUpload';
 
 const quickCommands = [
@@ -12,222 +12,111 @@ const quickCommands = [
   { cmd: '/who-is-lagging', label: 'Who\'s Lagging' },
   { cmd: '/next', label: 'Next Priorities' },
   { cmd: '/weekly-report', label: 'Weekly Report' },
+  { cmd: '/projects', label: 'List Projects' },
 ];
 
-function generateResponse(input: string): string {
+function generateResponse(input: string, project: Project | null, projects: Project[], switchProject: (id: string | null) => void): string {
   const q = input.toLowerCase().trim();
-  const project = seedProject;
+
+  // /projects command
+  if (q === '/projects') {
+    return `**Available Projects:**\n\n${projects.map((p, i) => `${i + 1}. **${p.name}** — ${p.healthStatus.toUpperCase()} (${p.healthScore}%) ${p.id === project?.id ? '← ACTIVE' : ''}`).join('\n')}\n\nTo switch, type: \`/switch <project name>\``;
+  }
+
+  // /switch command
+  if (q.startsWith('/switch ')) {
+    const name = input.slice(8).trim().toLowerCase();
+    const match = projects.find(p => p.name.toLowerCase().includes(name));
+    if (match) {
+      switchProject(match.id);
+      return `✅ Switched active project to **${match.name}**.\n\nAll data now scoped to this project. Ask me anything about it.`;
+    }
+    return `❌ No project found matching "${input.slice(8).trim()}".\n\nAvailable projects:\n${projects.map(p => `• ${p.name}`).join('\n')}\n\nTry: \`/switch ${projects[0].name}\``;
+  }
+
+  // No project selected guard
+  if (!project) {
+    return `⚠️ **No project selected.** Please choose an active project from the sidebar, or type \`/projects\` to list available projects and \`/switch <name>\` to activate one.`;
+  }
 
   if (q === '/status' || q.includes('where are we') || q.includes('status')) {
-    return `**Project Health: Yellow (${project.healthScore}%)**
-
-**Critical Blockers:**
-${project.blockers.filter(b => b.severity === 'critical').map(b => `• ${b.title} — Owner: ${b.owner}`).join('\n')}
-
-**What's Done:**
-• Research competitor analysis completed
-• Dashboard wireframe implementation done
-• Search Console OAuth flow working
-• 3 of 10 user interviews completed
-
-**What's At Risk:**
-• Launch date risk: **HIGH** — Tech room at ${project.rooms.find(r => r.id === 'room-tech')?.healthScore}%
-• Design system deadline: **AT RISK** — no designer assigned
-• Ads timeline risk: **MEDIUM** — depends on positioning doc
-
-**Room Health:**
-${project.rooms.map(r => `• ${r.icon} ${r.name}: ${r.healthStatus.toUpperCase()} (${r.healthScore}%)`).join('\n')}`;
+    return `**Project: ${project.name}**\n**Health: ${project.healthStatus.toUpperCase()} (${project.healthScore}%)**\n\n**Critical Blockers:**\n${project.blockers.filter(b => b.severity === 'critical').map(b => `• ${b.title} — Owner: ${b.owner}`).join('\n') || '• None'}\n\n**Room Health:**\n${project.rooms.map(r => `• ${r.icon} ${r.name}: ${r.healthStatus.toUpperCase()} (${r.healthScore}%)`).join('\n')}\n\n**Team Members:**\n${project.teamMembers.map(t => `• ${t.name} (${t.role}) — last update: ${t.lastUpdate}`).join('\n')}\n\n**Milestones:**\n${project.milestones.map(m => `• ${m.title} — ${m.dueDate} [${m.status.replace('_', ' ').toUpperCase()}]`).join('\n')}`;
   }
 
   if (q === '/blockers' || q.includes('blocked') || q.includes('blocker')) {
-    return `**Active Blockers (${project.blockers.length})**
-
-${project.blockers.map(b => {
-  const room = project.rooms.find(r => r.id === b.roomId);
-  return `**${b.severity.toUpperCase()}** — ${b.title}
-  Room: ${room?.name} · Owner: ${b.owner}
-  ${b.description}`;
-}).join('\n\n')}
-
-**Impact:** Ahrefs API blocker is on the critical path — if unresolved by April 10, the dashboard beta milestone will slip.`;
+    if (project.blockers.length === 0) return `**${project.name}** — No active blockers! 🎉`;
+    return `**Active Blockers in ${project.name} (${project.blockers.length})**\n\n${project.blockers.map(b => {
+      const room = project.rooms.find(r => r.id === b.roomId);
+      return `**${b.severity.toUpperCase()}** — ${b.title}\n  Room: ${room?.name} · Owner: ${b.owner}\n  ${b.description}`;
+    }).join('\n\n')}`;
   }
 
   if (q === '/risks' || q.includes('risk') || q.includes('deadline')) {
-    return `**Risk Assessment**
-
-🔴 **HIGH RISK: Launch Timeline**
-If the Ahrefs API key is not provisioned by April 10, the entire API integration milestone slips, pushing dashboard beta from April 22 to April 29+. This cascades to landing page (needs demo screenshots), training docs, and launch.
-
-🔴 **HIGH RISK: Staffing Gaps**
-4 critical gaps detected:
-• ML/AI Engineer — AI Insights Engine has no owner
-• UI/UX Designer — Design room completely unstaffed
-• Ops Lead — Training docs and onboarding unowned
-• Copywriter — Landing page content at risk
-
-🟡 **MEDIUM RISK: Marketing Dependencies**
-Landing page design blocked by: missing brand assets, missing demo screenshots from Tech.
-
-🟡 **MEDIUM RISK: Research Velocity**
-Only 3/10 user interviews completed. Customer contact list still pending from Sales.
-
-**Confidence of hitting May 6 launch: 35%**
-*To restore confidence: resolve Ahrefs API + hire designer + assign ops lead within 3 days.*`;
+    const overdueCount = project.rooms.flatMap(r => r.deliverables).filter(d => d.status !== 'done' && new Date(d.dueDate) < new Date()).length;
+    const unstaffedRooms = project.rooms.filter(r => r.teamMembers.length === 0);
+    return `**Risk Assessment — ${project.name}**\n\n${project.blockers.filter(b => b.severity === 'critical').length > 0 ? `🔴 **HIGH RISK: Critical Blockers**\n${project.blockers.filter(b => b.severity === 'critical').map(b => `• ${b.title}`).join('\n')}\n\n` : ''}${overdueCount > 0 ? `🔴 **Overdue Items:** ${overdueCount} deliverables past due date\n\n` : ''}${unstaffedRooms.length > 0 ? `🟡 **Staffing Gaps:** ${unstaffedRooms.map(r => r.name).join(', ')} rooms have no team members\n\n` : ''}**Deadline:** ${project.deadline}\n**Budget:** ${project.budget}`;
   }
 
   if (q === '/who-is-lagging' || q.includes('lagging') || q.includes('follow up')) {
-    return `**Accountability Report**
-
-⚠️ **Alex Chen** (Tech Lead)
-Last update: April 2 — **6 days ago**
-Has 2 critical deliverables in progress. No update on GA4 pipeline (overdue).
-*Recommendation: Immediate follow-up required.*
-
-⚠️ **Operations Room**
-No team lead assigned. 2 deliverables with no owner.
-Both depend on Dashboard completion.
-*Recommendation: Assign ops lead or these will slip past deadline.*
-
-⚠️ **Design Room**
-Completely unstaffed. 2 deliverables unowned. Brand assets overdue.
-*Recommendation: URGENT — hire/contract designer this week.*
-
-✅ **Jordan Blake** (Marketing) — Updated 2 days ago, on track
-✅ **Sarah Kim** (Frontend Dev) — Updated 1 day ago, active
-✅ **Priya Patel** (Research) — Updated 3 days ago, progressing`;
+    const today = new Date();
+    const lagging = project.teamMembers.filter(tm => {
+      if (!tm.lastUpdate) return true;
+      const diff = (today.getTime() - new Date(tm.lastUpdate).getTime()) / (1000 * 60 * 60 * 24);
+      return diff > 3;
+    });
+    const unstaffed = project.rooms.filter(r => r.teamMembers.length === 0);
+    let report = `**Accountability Report — ${project.name}**\n\n`;
+    if (lagging.length > 0) {
+      report += lagging.map(tm => `⚠️ **${tm.name}** (${tm.role})\nLast update: ${tm.lastUpdate || 'Never'}`).join('\n\n');
+    } else {
+      report += '✅ All team members have recent updates.\n';
+    }
+    if (unstaffed.length > 0) {
+      report += `\n\n⚠️ **Unstaffed Rooms:** ${unstaffed.map(r => `${r.icon} ${r.name}`).join(', ')}`;
+    }
+    return report;
   }
 
-  if (q === '/next' || q.includes('priorit') || q.includes('what should') || q.includes('next')) {
-    return `**Next 5 Priorities (Critical Path Order)**
-
-1. **Resolve Ahrefs API key** — Owner: Marcus Webb
-   *Blocking: Ahrefs integration → Dashboard data → Beta launch*
-
-2. **Hire/contract UI/UX designer** — Owner: Marcus Webb
-   *Blocking: Brand assets → Landing page → Marketing launch*
-
-3. **Follow up with Alex Chen** — Owner: Project Owner
-   *6 days without update. GA4 pipeline is overdue.*
-
-4. **Finalize positioning document** — Owner: Jordan Blake (due Apr 11)
-   *Blocking: Landing page copy, ad campaign planning*
-
-5. **Assign Operations lead** — Owner: Marcus Webb
-   *Training docs and onboarding flow have no owner*
-
-**Critical path warning:** If items 1 and 2 are not resolved by end of this week, the May 6 launch date becomes unachievable.`;
+  if (q === '/next' || q.includes('priorit') || q.includes('next')) {
+    const notDone = project.rooms.flatMap(r => r.deliverables).filter(d => d.status !== 'done').sort((a, b) => {
+      const p: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+      return (p[a.priority] ?? 4) - (p[b.priority] ?? 4);
+    });
+    return `**Next Priorities — ${project.name}**\n\n${notDone.slice(0, 5).map((d, i) => `${i + 1}. **${d.title}** — Owner: ${d.owner}\n   Priority: ${d.priority.toUpperCase()} · Due: ${d.dueDate} · Status: ${d.status.replace('_', ' ')}`).join('\n\n')}`;
   }
 
   if (q === '/weekly-report' || q.includes('weekly') || q.includes('report') || q.includes('summary') || q.includes('ceo')) {
-    return `**Weekly Status Report — AI SEO Dashboard**
-*Generated April 8, 2026*
-
----
-
-**Overall: YELLOW (62%) — Action Required**
-
-**Executive Summary:**
-Project is progressing in Marketing and Research but stalled in Tech due to missing API credentials and staffing gaps. Design and Ops rooms are critically understaffed. Launch date of May 6 is at HIGH RISK without immediate intervention.
-
-**Completed This Week:**
-✅ Dashboard wireframe implementation (Sarah Kim)
-✅ Competitor analysis delivered (Priya Patel)
-✅ Search Console OAuth flow working (Alex Chen)
-✅ 3 user interviews completed (Priya Patel)
-
-**Blocked:**
-🔴 Ahrefs API key not provisioned (blocks integration milestone)
-🔴 No designer assigned (blocks brand assets + landing page)
-🔴 No ops lead (training docs + onboarding unowned)
-🟡 Customer contact list needed for research interviews
-
-**Key Metrics:**
-• Deliverables completed: 1/14 (7%)
-• Deliverables blocked: 1/14
-• Deliverables overdue: 2/14
-• Team update frequency: 60% (target: daily)
-
-**Immediate Actions Required:**
-1. Procure Ahrefs API key (Marcus Webb)
-2. Hire designer (Marcus Webb)
-3. Follow up with Alex Chen (6 days silent)
-4. Assign ops lead (Marcus Webb)
-5. Provide customer list to Research (Sales team)
-
-**Next Week Goals:**
-• Complete all 3 API integrations
-• Finalize positioning document
-• Complete 7 remaining user interviews
-• Assign design and ops roles
-
----
-*Report generated by Project Pulse AI from ${project.updates.length} updates, ${project.deliverables.length} deliverables, and ${project.blockers.length} blockers.*`;
+    const done = project.rooms.flatMap(r => r.deliverables).filter(d => d.status === 'done');
+    const inProg = project.rooms.flatMap(r => r.deliverables).filter(d => d.status === 'in_progress');
+    const blockedD = project.rooms.flatMap(r => r.deliverables).filter(d => d.status === 'blocked');
+    const total = project.rooms.flatMap(r => r.deliverables).length;
+    return `**Weekly Status Report — ${project.name}**\n*Generated ${new Date().toLocaleDateString()}*\n\n---\n\n**Overall: ${project.healthStatus.toUpperCase()} (${project.healthScore}%)**\n\n**Progress:** ${done.length}/${total} deliverables complete (${Math.round(done.length / total * 100)}%)\n• In Progress: ${inProg.length}\n• Blocked: ${blockedD.length}\n\n**Room Status:**\n${project.rooms.map(r => `• ${r.icon} ${r.name}: ${r.healthStatus.toUpperCase()} (${r.healthScore}%)`).join('\n')}\n\n**Active Blockers:**\n${project.blockers.map(b => `• ${b.title} (${b.severity})`).join('\n') || '• None'}\n\n**Team:**\n${project.teamMembers.map(t => `• ${t.name} — ${t.role}`).join('\n')}\n\n---\n*Report scoped to: ${project.name} (${project.id})*`;
   }
 
-  if (q.includes('room tech') || q.includes('engineering') || q.includes('technical')) {
-    const tech = project.rooms.find(r => r.id === 'room-tech')!;
-    return `**Tech Room Status: RED (${tech.healthScore}%)**
-
-**Objective:** ${tech.objective}
-
-**Deliverables:**
-${tech.deliverables.map(d => `• ${d.status === 'done' ? '✅' : d.status === 'blocked' ? '🔴' : d.status === 'in_progress' ? '🟡' : '⚪'} ${d.title} — ${d.owner} (due ${d.dueDate})`).join('\n')}
-
-**Blockers:**
-${tech.blockers.map(b => `• ${b.title}: ${b.description}`).join('\n')}
-
-**AI Recommendations:**
-${tech.recommendations.map(r => `→ ${r}`).join('\n')}`;
+  // Room-specific queries
+  const roomMatch = project.rooms.find(r => q.includes(`room ${r.name.toLowerCase()}`));
+  if (roomMatch) {
+    return `**${roomMatch.name} Room Status — ${project.name}: ${roomMatch.healthStatus.toUpperCase()} (${roomMatch.healthScore}%)**\n\n**Objective:** ${roomMatch.objective}\n\n**Deliverables:**\n${roomMatch.deliverables.map(d => `• ${d.status === 'done' ? '✅' : d.status === 'blocked' ? '🔴' : d.status === 'in_progress' ? '🟡' : '⚪'} ${d.title} — ${d.owner} (due ${d.dueDate})`).join('\n')}\n\n${roomMatch.blockers.length > 0 ? `**Blockers:**\n${roomMatch.blockers.map(b => `• ${b.title}: ${b.description}`).join('\n')}\n\n` : ''}**AI Recommendations:**\n${roomMatch.recommendations.map(r => `→ ${r}`).join('\n')}`;
   }
 
-  if (q.includes('room marketing')) {
-    const mkt = project.rooms.find(r => r.id === 'room-marketing')!;
-    return `**Marketing Room Status: GREEN (${mkt.healthScore}%)**
-
-**Objective:** ${mkt.objective}
-
-**Deliverables:**
-${mkt.deliverables.map(d => `• ${d.status === 'done' ? '✅' : d.status === 'in_progress' ? '🟡' : '⚪'} ${d.title} — ${d.owner} (due ${d.dueDate})`).join('\n')}
-
-**On Track:** Positioning document due April 11.
-**Dependency:** Landing page needs demo screenshots from Tech + brand assets from Design.`;
-  }
-
-  return `I can help you understand project status. Here's what I found:
-
-**Project: ${project.name}**
-Health: **${project.healthStatus.toUpperCase()} (${project.healthScore}%)**
-Active blockers: ${project.blockers.length}
-Overdue items: ${project.rooms.flatMap(r => r.deliverables).filter(d => d.status !== 'done' && new Date(d.dueDate) < new Date()).length}
-
-Try these commands for specific insights:
-• \`/status\` — Full project status
-• \`/blockers\` — Active blockers
-• \`/risks\` — Risk assessment
-• \`/who-is-lagging\` — Accountability report
-• \`/next\` — Next priorities
-• \`/weekly-report\` — Executive summary
-
-Or ask me anything like:
-• "Where are we?"
-• "What's the risk of missing the deadline?"
-• "Summarize progress for the CEO"`;
+  return `**Project: ${project.name}** (${project.id})\nHealth: **${project.healthStatus.toUpperCase()} (${project.healthScore}%)**\nRooms: ${project.rooms.length} · Blockers: ${project.blockers.length} · Team: ${project.teamMembers.length}\n\nTry: \`/status\`, \`/blockers\`, \`/risks\`, \`/who-is-lagging\`, \`/next\`, \`/weekly-report\`\nOr: \`/projects\`, \`/switch <name>\``;
 }
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '0',
-      role: 'assistant',
-      content: `**Project Pulse Command Interface**
+  const { activeProject, activeProjectId, projects, setActiveProjectId, getChatMessages, setChatMessages } = useProject();
+  const projectMessages = activeProjectId ? getChatMessages(activeProjectId) : [];
 
-Connected to: **${seedProject.name}**
-Health: **YELLOW (${seedProject.healthScore}%)**
+  const getInitialMessage = (): ChatMessage => ({
+    id: '0',
+    role: 'assistant',
+    content: activeProject
+      ? `**Project Pulse Command Interface**\n\nConnected to: **${activeProject.name}**\nHealth: **${activeProject.healthStatus.toUpperCase()} (${activeProject.healthScore}%)**\n\n⚠️ All queries are scoped to this project only. To switch projects, use \`/projects\` or \`/switch <name>\`.\n\nAsk me anything about your project, or use quick commands below.`
+      : `**Project Pulse Command Interface**\n\n⚠️ **No project selected.** Please choose a project from the sidebar or type \`/projects\` to list available projects.`,
+    timestamp: new Date().toISOString(),
+  });
 
-Ask me anything about your project, or use quick commands below.`,
-      timestamp: new Date().toISOString(),
-    },
-  ]);
+  const messages = projectMessages.length > 0 ? projectMessages : [getInitialMessage()];
+
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [chatFiles, setChatFiles] = useState<UploadedFile[]>([]);
@@ -237,6 +126,12 @@ Ask me anything about your project, or use quick commands below.`,
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
+
+  const setMessages = (msgs: ChatMessage[]) => {
+    if (activeProjectId) {
+      setChatMessages(activeProjectId, msgs);
+    }
+  };
 
   const handleSend = async (text?: string) => {
     const msg = text || input.trim();
@@ -248,20 +143,22 @@ Ask me anything about your project, or use quick commands below.`,
       content: msg,
       timestamp: new Date().toISOString(),
     };
-    setMessages(prev => [...prev, userMsg]);
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI response delay
     setTimeout(() => {
-      const response = generateResponse(msg);
+      const response = generateResponse(msg, activeProject, projects, (id) => {
+        setActiveProjectId(id);
+      });
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: response,
         timestamp: new Date().toISOString(),
       };
-      setMessages(prev => [...prev, aiMsg]);
+      setMessages([...newMessages, aiMsg]);
       setIsTyping(false);
     }, 800);
   };
@@ -269,19 +166,28 @@ Ask me anything about your project, or use quick commands below.`,
   return (
     <AppLayout>
       <div className="flex flex-col h-screen">
-        {/* Header */}
         <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-lg font-display font-bold">Command Interface</h1>
-            <p className="text-xs text-muted-foreground">AI-powered project status queries</p>
+            <p className="text-xs text-muted-foreground">
+              {activeProject ? `Scoped to: ${activeProject.name}` : 'No project selected'}
+            </p>
           </div>
           <div className="flex items-center gap-2">
+            {activeProject && (
+              <span className={`text-[10px] font-display px-2 py-0.5 rounded ${
+                activeProject.healthStatus === 'green' ? 'text-health-green bg-health-green/10' :
+                activeProject.healthStatus === 'yellow' ? 'text-health-yellow bg-health-yellow/10' :
+                'text-health-red bg-health-red/10'
+              }`}>
+                {activeProject.healthStatus.toUpperCase()} {activeProject.healthScore}%
+              </span>
+            )}
             <span className="w-2 h-2 rounded-full bg-health-green animate-pulse" />
             <span className="text-xs text-muted-foreground font-display">CONNECTED</span>
           </div>
         </div>
 
-        {/* Quick Commands */}
         <div className="px-4 py-3 border-b border-border/50 flex gap-2 flex-wrap shrink-0">
           {quickCommands.map(qc => (
             <button
@@ -294,9 +200,8 @@ Ask me anything about your project, or use quick commands below.`,
           ))}
         </div>
 
-        {/* Messages */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((msg, i) => (
+          {messages.map((msg) => (
             <motion.div
               key={msg.id}
               initial={{ opacity: 0, y: 10 }}
@@ -313,11 +218,8 @@ Ask me anything about your project, or use quick commands below.`,
                 )}
                 <div className="text-sm whitespace-pre-wrap leading-relaxed chat-content">
                   {msg.content.split('\n').map((line, j) => {
-                    // Simple markdown-like rendering
                     let rendered = line;
-                    // Bold
                     rendered = rendered.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                    // Code
                     rendered = rendered.replace(/`(.*?)`/g, '<code class="bg-secondary px-1 rounded text-primary font-display text-xs">$1</code>');
                     return (
                       <span key={j}>
@@ -331,11 +233,7 @@ Ask me anything about your project, or use quick commands below.`,
             </motion.div>
           ))}
           {isTyping && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-start"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
               <div className="glass-card px-4 py-3 rounded-lg rounded-bl-sm">
                 <div className="text-[10px] font-display text-primary mb-2">PULSE AI</div>
                 <div className="flex gap-1">
@@ -348,7 +246,6 @@ Ask me anything about your project, or use quick commands below.`,
           )}
         </div>
 
-        {/* Input */}
         <div className="p-4 border-t border-border shrink-0 space-y-2">
           <FileUpload files={chatFiles} onFilesChange={setChatFiles} compact />
           <form onSubmit={(e) => { e.preventDefault(); handleSend(); setChatFiles([]); }} className="flex gap-2">
@@ -356,7 +253,7 @@ Ask me anything about your project, or use quick commands below.`,
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about project status, or type /status, /blockers, /risks..."
+              placeholder={activeProject ? `Ask about ${activeProject.name}...` : 'Select a project first...'}
               className="command-input flex-1 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
             />
             <button
