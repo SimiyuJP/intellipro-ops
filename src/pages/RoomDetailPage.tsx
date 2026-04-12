@@ -7,13 +7,7 @@ import { HealthBadge } from '@/components/HealthBadge';
 import { useProject } from '@/contexts/ProjectContext';
 import { FileUpload, UploadedFile } from '@/components/FileUpload';
 import { computeRoomScore, getRoomStatus } from '@/lib/healthScoring';
-
-function StatusIcon({ status }: { status: string }) {
-  if (status === 'done') return <span className="text-health-green">✓</span>;
-  if (status === 'blocked') return <span className="text-health-red">✕</span>;
-  if (status === 'in_progress') return <span className="text-health-yellow">◉</span>;
-  return <span className="text-muted-foreground">○</span>;
-}
+import { TaskManager } from '@/components/TaskManager';
 
 export default function RoomDetailPage() {
   const { roomId } = useParams();
@@ -102,32 +96,7 @@ export default function RoomDetailPage() {
             <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">
               Deliverables ({room.deliverables.length})
             </h2>
-            <div className="space-y-3">
-              {room.deliverables.map(d => (
-                <div key={d.id} className="flex items-start justify-between p-3 bg-secondary/30 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <StatusIcon status={d.status} />
-                    <div>
-                      <div className="text-sm font-medium">{d.title}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{d.description}</div>
-                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        <span>Owner: <span className="text-foreground">{d.owner}</span></span>
-                        <span>Due: <span className="text-foreground">{d.dueDate}</span></span>
-                        <span>Effort: {d.estimatedEffort}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <span className={`text-[10px] font-display px-1.5 py-0.5 rounded capitalize ${
-                    d.status === 'blocked' ? 'text-health-red bg-health-red/10' :
-                    d.status === 'done' ? 'text-health-green bg-health-green/10' :
-                    d.status === 'in_progress' ? 'text-health-yellow bg-health-yellow/10' :
-                    'text-muted-foreground bg-muted/50'
-                  }`}>
-                    {d.status.replace('_', ' ')}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <TaskManager roomId={room.id} deliverables={room.deliverables} />
           </motion.div>
 
           {/* Right sidebar */}
