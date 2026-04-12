@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/AppLayout';
 import { HealthMeter } from '@/components/HealthMeter';
 import { HealthBadge } from '@/components/HealthBadge';
 import { useProject } from '@/contexts/ProjectContext';
+import { computeProjectScore, getRoomStatus } from '@/lib/healthScoring';
 import { Link } from 'react-router-dom';
 
 function StatusIcon({ status }: { status: string }) {
@@ -40,6 +42,7 @@ function ConfidenceBar({ value, label }: { value: number; label: string }) {
 
 export default function DashboardPage() {
   const { activeProject } = useProject();
+  const [showBowlTooltip, setShowBowlTooltip] = useState(false);
 
   if (!activeProject) {
     return (
@@ -56,6 +59,8 @@ export default function DashboardPage() {
   }
 
   const project = activeProject;
+  const projectScore = computeProjectScore(project);
+
   const allDeliverables = project.rooms.flatMap(r => r.deliverables);
   const overdue = allDeliverables.filter(d => d.status !== 'done' && new Date(d.dueDate) < new Date());
   const blocked = allDeliverables.filter(d => d.status === 'blocked');
@@ -109,45 +114,106 @@ export default function DashboardPage() {
           </Link>
         )}
 
-        {/* Top row: Health + Room Health + Confidence */}
+        {/* Top row: Overall Bowl + Room Health + AI Focus */}
         <div className="grid grid-cols-12 gap-4">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="col-span-3 glass-card-elevated p-5 flex flex-col items-center justify-center">
-            <HealthMeter score={project.healthScore} status={project.healthStatus} size="lg" label="Project Health" />
+          {/* Overall Bowl with hover tooltip */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="col-span-3 glass-card-elevated p-5 flex flex-col items-center justify-center relative"
+            onMouseEnter={() => setShowBowlTooltip(true)}
+            onMouseLeave={() => setShowBowlTooltip(false)}
+          >
+            <HealthMeter score={projectScore.overallPercent} status={projectScore.status} size="lg" label="Project Progress" />
+            <div className="text-[10px] text-muted-foreground mt-2 text-center">
+              {projectScore.totalDone}/{projectScore.totalDeliverables} tasks done
+            </div>
+
+            {/* Hover tooltip — shows done vs pending per room */}
+            {showBowlTooltip && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 w-80 glass-card-elevated border border-border p-4 rounded-lg shadow-xl"
+              >
+                <div className="text-xs font-display font-bold mb-3 text-center">
+                  Progress Breakdown — {projectScore.overallPercent}% Complete
+                </div>
+                <div className="space-y-3">
+                  {projectScore.roomScores.map(rs => (
+                    <div key={rs.roomId}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm">{rs.roomIcon}</span>
+                          <span className="text-xs font-display font-medium">{rs.roomName}</span>
+                        </div>
+                        <span className="text-[10px] font-display text-muted-foreground">
+                          {rs.doneCount}/{rs.totalCount} · {rs.completionPercent}% · wt {Math.round(rs.weight * 100)}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-secondary rounded-full overflow-hidden mb-1">
+                        <div
+                          className={`h-full rounded-full ${
+                            rs.completionPercent >= 70 ? 'bg-health-green' :
+                            rs.completionPercent >= 35 ? 'bg-health-yellow' : 'bg-health-red'
+                          }`}
+                          style={{ width: `${rs.completionPercent}%` }}
+                        />
+                      </div>
+                      {rs.doneItems.length > 0 && (
+                        <div className="text-[9px] text-health-green">
+                          ✓ {rs.doneItems.join(', ')}
+                        </div>
+                      )}
+                      {rs.pendingItems.length > 0 && (
+                        <div className="text-[9px] text-muted-foreground">
+                          ○ {rs.pendingItems.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-border/50 mt-3 pt-2 text-center text-[10px] text-muted-foreground">
+                  Weighted by task priority (critical=4×, high=3×, medium=2×, low=1×)
+                </div>
+              </motion.div>
+            )}
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="col-span-5 glass-card p-5">
-            <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">Room Health + Confidence</h2>
+            <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">Room Progress</h2>
             <div className="space-y-2.5">
-              {project.rooms.map(room => (
-                <Link key={room.id} to={`/rooms/${room.id}`} className="flex items-center justify-between hover:bg-secondary/30 p-2 rounded transition-colors -mx-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg">{room.icon}</span>
-                    <div>
-                      <span className="text-sm font-medium">{room.name}</span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className={`text-[9px] font-display ${
-                          room.confidence >= 70 ? 'text-health-green' :
-                          room.confidence >= 40 ? 'text-health-yellow' : 'text-health-red'
-                        }`}>
-                          {room.confidence}% confidence
-                        </span>
+              {projectScore.roomScores.map(rs => {
+                const room = project.rooms.find(r => r.id === rs.roomId)!;
+                const roomStatus = getRoomStatus(rs.completionPercent);
+                return (
+                  <Link key={rs.roomId} to={`/rooms/${rs.roomId}`} className="flex items-center justify-between hover:bg-secondary/30 p-2 rounded transition-colors -mx-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{rs.roomIcon}</span>
+                      <div>
+                        <span className="text-sm font-medium">{rs.roomName}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[9px] font-display text-muted-foreground">
+                            {rs.doneCount}/{rs.totalCount} tasks · wt {Math.round(rs.weight * 100)}%
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${
-                          room.healthStatus === 'green' ? 'bg-health-green' :
-                          room.healthStatus === 'yellow' ? 'bg-health-yellow' : 'bg-health-red'
-                        }`}
-                        style={{ width: `${room.healthScore}%` }}
-                      />
+                    <div className="flex items-center gap-3">
+                      <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${
+                            roomStatus === 'green' ? 'bg-health-green' :
+                            roomStatus === 'yellow' ? 'bg-health-yellow' : 'bg-health-red'
+                          }`}
+                          style={{ width: `${rs.completionPercent}%` }}
+                        />
+                      </div>
+                      <HealthBadge status={roomStatus} label={`${rs.completionPercent}%`} />
                     </div>
-                    <HealthBadge status={room.healthStatus} label={`${room.healthScore}%`} />
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           </motion.div>
 
@@ -161,7 +227,6 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-            {/* Quick links */}
             <div className="flex gap-2 mt-4 pt-3 border-t border-border/50">
               <Link to="/decisions" className="text-[10px] font-display text-muted-foreground hover:text-primary transition-colors">
                 {project.decisions.length} Decisions
@@ -257,19 +322,20 @@ export default function DashboardPage() {
           <h2 className="font-display text-xs text-muted-foreground mb-4 uppercase tracking-wider">🎯 Confidence Scoring — Beyond Health Status</h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             {project.rooms.map(room => {
-              const avgConfidence = room.confidence;
+              const rs = projectScore.roomScores.find(r => r.roomId === room.id);
+              const roomStatus = getRoomStatus(rs?.completionPercent ?? 0);
               return (
                 <Link key={room.id} to={`/rooms/${room.id}`} className="bg-secondary/20 rounded-lg p-3 hover:bg-secondary/30 transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <span>{room.icon}</span>
                     <span className="text-sm font-display font-bold">{room.name}</span>
-                    <HealthBadge status={room.healthStatus} label={`${room.healthScore}%`} />
+                    <HealthBadge status={roomStatus} label={`${rs?.completionPercent ?? 0}%`} />
                   </div>
                   <div className="flex items-center gap-2 mb-3">
                     <span className={`text-lg font-display font-bold ${
-                      avgConfidence >= 70 ? 'text-health-green' :
-                      avgConfidence >= 40 ? 'text-health-yellow' : 'text-health-red'
-                    }`}>{avgConfidence}%</span>
+                      room.confidence >= 70 ? 'text-health-green' :
+                      room.confidence >= 40 ? 'text-health-yellow' : 'text-health-red'
+                    }`}>{room.confidence}%</span>
                     <span className="text-xs text-muted-foreground">confidence</span>
                   </div>
                   <div className="space-y-1.5">

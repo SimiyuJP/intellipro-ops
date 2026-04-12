@@ -6,6 +6,7 @@ import { HealthMeter } from '@/components/HealthMeter';
 import { HealthBadge } from '@/components/HealthBadge';
 import { useProject } from '@/contexts/ProjectContext';
 import { FileUpload, UploadedFile } from '@/components/FileUpload';
+import { computeRoomScore, getRoomStatus } from '@/lib/healthScoring';
 
 function StatusIcon({ status }: { status: string }) {
   if (status === 'done') return <span className="text-health-green">✓</span>;
@@ -38,6 +39,9 @@ export default function RoomDetailPage() {
     );
   }
 
+  const rs = computeRoomScore(room);
+  const roomStatus = getRoomStatus(rs.completionPercent);
+
   return (
     <AppLayout>
       <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -49,12 +53,15 @@ export default function RoomDetailPage() {
               <div className="flex items-center gap-3">
                 <span className="text-3xl">{room.icon}</span>
                 <h1 className="text-2xl font-display font-bold">{room.name} Room</h1>
-                <HealthBadge status={room.healthStatus} label={`${room.healthScore}%`} />
+                <HealthBadge status={roomStatus} label={`${rs.completionPercent}%`} />
               </div>
               <p className="text-sm text-muted-foreground mt-1">{room.objective}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {rs.doneCount}/{rs.totalCount} tasks done
+              </p>
             </div>
           </div>
-          <HealthMeter score={room.healthScore} status={room.healthStatus} size="md" />
+          <HealthMeter score={rs.completionPercent} status={roomStatus} size="md" />
         </div>
 
         {/* Confidence Scoring */}
@@ -65,7 +72,7 @@ export default function RoomDetailPage() {
               room.confidence >= 70 ? 'text-health-green' :
               room.confidence >= 40 ? 'text-health-yellow' : 'text-health-red'
             }`}>{room.confidence}%</span>
-            {room.healthStatus === 'green' && room.confidence < 60 && (
+            {roomStatus === 'green' && room.confidence < 60 && (
               <span className="text-[10px] font-display text-health-yellow bg-health-yellow/10 px-2 py-0.5 rounded">
                 GREEN but LOW CONFIDENCE — assumptions not validated
               </span>
