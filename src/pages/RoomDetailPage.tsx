@@ -7,13 +7,7 @@ import { HealthBadge } from '@/components/HealthBadge';
 import { useProject } from '@/contexts/ProjectContext';
 import { FileUpload, UploadedFile } from '@/components/FileUpload';
 import { computeRoomScore, getRoomStatus } from '@/lib/healthScoring';
-
-function StatusIcon({ status }: { status: string }) {
-  if (status === 'done') return <span className="text-health-green">✓</span>;
-  if (status === 'blocked') return <span className="text-health-red">✕</span>;
-  if (status === 'in_progress') return <span className="text-health-yellow">◉</span>;
-  return <span className="text-muted-foreground">○</span>;
-}
+import { TaskManager } from '@/components/TaskManager';
 
 export default function RoomDetailPage() {
   const { roomId } = useParams();
