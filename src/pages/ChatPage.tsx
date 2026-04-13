@@ -114,6 +114,24 @@ function generateResponse(input: string, project: Project | null, projects: Proj
     return `**Scope Creep Analysis — ${project.name}**\n\n**Changes This Period:** ${project.scopeChanges.length} total\n• Added: ${added.length}\n• Removed: ${project.scopeChanges.filter(sc => sc.type === 'removed').length}\n• Modified: ${project.scopeChanges.filter(sc => sc.type === 'modified').length}\n\n${noTradeoff.length > 0 ? `⚠️ **SCOPE CREEP ALERT:** ${noTradeoff.length} item${noTradeoff.length > 1 ? 's' : ''} added without deadline/budget adjustment:\n${noTradeoff.map(sc => `• ${sc.description} — added by ${sc.addedBy} on ${sc.date}`).join('\n')}\n\n` : '✅ All scope changes have recorded tradeoffs.\n\n'}**Full Log:**\n${project.scopeChanges.map(sc => `${sc.type === 'added' ? '+' : sc.type === 'removed' ? '−' : '~'} ${sc.description} (${sc.date})${sc.hasTradeoff ? ` ✓ Tradeoff: ${sc.tradeoffNote}` : ' ⚠ No tradeoff'}`).join('\n')}`;
   }
 
+  if (q === '/drift' || q.includes('drift') || q.includes('behind') || q.includes('on track') || q.includes('pace')) {
+    const drift = computeDrift(project);
+    return `**📐 Drift Detection — ${project.name}**\n\n**Status: ${drift.status.replace('_', ' ').toUpperCase()}**\n\n• Actual: **${drift.currentPercent}%** · Expected: **${drift.expectedPercent}%**\n• Gap: **${drift.driftPercent > 0 ? '-' : '+'}${Math.abs(drift.driftPercent)}%** (${drift.driftDays > 0 ? `${drift.driftDays} days behind` : 'on time'})\n• Velocity: **${drift.velocityPerWeek}%/week** (need ${drift.requiredVelocityPerWeek}%/week)\n• Projected completion: **${drift.projectedCompletionDate}**\n• Deadline: **${drift.deadline}**${drift.willMissDeadline ? '\n\n🔴 **AT CURRENT PACE, THIS PROJECT WILL MISS ITS DEADLINE.**' : '\n\n✅ On track to meet deadline.'}\n\n${drift.summary}`;
+  }
+
+  if (q === '/assumptions' || q.includes('assumption')) {
+    const analysis = analyzeAssumptions(project);
+    const assumptions = project.intelligence?.assumptions ?? [];
+    if (assumptions.length === 0) return `**${project.name}** — No assumptions tracked yet.`;
+    return `**🧪 Assumption Tracker — ${project.name}** (${analysis.total} tracked)\n\n• Active: ${analysis.active} · Validated: ${analysis.validated} · Broken: ${analysis.broken}\n\n${analysis.criticalBroken.length > 0 ? `**🔴 BROKEN (Critical/High):**\n${analysis.criticalBroken.map(a => `• **${a.statement}**\n  Impact: ${a.impactDescription}\n  Broken: ${a.brokenAt}`).join('\n\n')}\n\n` : ''}${analysis.unvalidated.length > 0 ? `**⚠️ LOW CONFIDENCE (<50%):**\n${analysis.unvalidated.map(a => `• ${a.statement} — ${a.confidence}% confidence\n  ${a.impactDescription}`).join('\n\n')}` : '✅ All active assumptions have ≥50% confidence.'}`;
+  }
+
+  if (q === '/signals' || q.includes('signal') || q.includes('what matters') || q.includes('noise')) {
+    const signals = filterSignals(generateSignals(project));
+    if (signals.length === 0) return `**${project.name}** — No high-impact signals detected. ✅`;
+    return `**📡 Signal Feed — ${project.name}** (${signals.length} signals above threshold)\n\nRanked by delivery impact:\n\n${signals.slice(0, 8).map((s, i) => `${i + 1}. **${s.title}** [Impact: ${s.impactScore}]\n   ${s.severity.toUpperCase()} · ${s.description}`).join('\n\n')}`;
+  }
+
   if (q === '/next' || q.includes('priorit') || q.includes('next')) {
     const notDone = project.rooms.flatMap(r => r.deliverables).filter(d => d.status !== 'done').sort((a, b) => {
       const p: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
