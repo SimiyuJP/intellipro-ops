@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { useProject } from '@/contexts/ProjectContext';
 import { ChatMessage, Project } from '@/types/project';
 import { FileUpload, UploadedFile } from '@/components/FileUpload';
+import { computeDrift, analyzeAssumptions, generateSignals, filterSignals } from '@/lib/intelligence';
 
 const quickCommands = [
   { cmd: '/status', label: 'Project Status' },
@@ -13,6 +14,9 @@ const quickCommands = [
   { cmd: '/decisions', label: 'Decisions' },
   { cmd: '/red-flags', label: 'Red Flags' },
   { cmd: '/scope-creep', label: 'Scope Creep' },
+  { cmd: '/drift', label: 'Drift' },
+  { cmd: '/assumptions', label: 'Assumptions' },
+  { cmd: '/signals', label: 'Signals' },
   { cmd: '/who-is-lagging', label: 'Who\'s Lagging' },
   { cmd: '/next', label: 'Next Priorities' },
   { cmd: '/weekly-report', label: 'Weekly Report' },
