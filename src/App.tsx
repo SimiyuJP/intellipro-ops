@@ -13,6 +13,7 @@ import BriefPage from "./pages/BriefPage";
 import DecisionsPage from "./pages/DecisionsPage";
 import MeetingsPage from "./pages/MeetingsPage";
 import AlertsPage from "./pages/AlertsPage";
+import IntelligencePage from "./pages/IntelligencePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/decisions" element={<DecisionsPage />} />
             <Route path="/meetings" element={<MeetingsPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
+            <Route path="/intelligence" element={<IntelligencePage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

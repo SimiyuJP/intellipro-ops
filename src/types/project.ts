@@ -19,6 +19,7 @@ export interface Project {
   meetings: Meeting[];
   scopeChanges: ScopeChange[];
   redFlags: RedFlag[];
+  intelligence?: ProjectIntelligence;
 }
 
 export interface Room {
