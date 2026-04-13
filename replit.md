@@ -35,6 +35,19 @@ The dev server starts on port 5000.
 npm run build
 ```
 
+## Feature Layers
+
+- **Intelligence Layer** (`/intelligence`) — Drift detection, assumption tracking, signal feed
+- **Visibility Layer** (`/visibility`) — Stakeholder Lens toggle (CEO/Tech Lead/Finance views), Timeline Replay (project state scrubber), Dependency Graph (SVG deliverable map with critical chain)
+- **Predictive Layer** (`/predictive`) — Delivery Forecast (P50/P70/P95 dates, velocity vs required), Risk Heatmap (room-level risk scoring), Pattern Matching (match current project against historical project outcomes)
+
+## Data Files
+
+- `src/data/seedProject.ts` — AI SEO Dashboard project seed data
+- `src/data/seedBrandingProject.ts` — KijijiPay Branding project seed data
+- `src/data/seedDecisions.ts` — Decisions, meetings, scope changes, red flags for both projects
+- `src/data/seedSnapshots.ts` — Weekly historical snapshots + historical pattern library
+
 ## Notes
 
 - Migrated from Lovable to Replit (April 2025)

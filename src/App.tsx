@@ -14,6 +14,8 @@ import DecisionsPage from "./pages/DecisionsPage";
 import MeetingsPage from "./pages/MeetingsPage";
 import AlertsPage from "./pages/AlertsPage";
 import IntelligencePage from "./pages/IntelligencePage";
+import VisibilityPage from "./pages/VisibilityPage";
+import PredictivePage from "./pages/PredictivePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/meetings" element={<MeetingsPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
             <Route path="/intelligence" element={<IntelligencePage />} />
+            <Route path="/visibility" element={<VisibilityPage />} />
+            <Route path="/predictive" element={<PredictivePage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

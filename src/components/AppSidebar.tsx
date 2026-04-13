@@ -1,15 +1,32 @@
 import { Link, useLocation } from 'react-router-dom';
 import { ProjectSwitcher } from './ProjectSwitcher';
 
-const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: '◈' },
-  { path: '/rooms', label: 'Rooms', icon: '▦' },
-  { path: '/intelligence', label: 'Intelligence', icon: '🧠' },
-  { path: '/decisions', label: 'Decisions', icon: '⚖' },
-  { path: '/meetings', label: 'Meetings', icon: '📅' },
-  { path: '/alerts', label: 'Alerts', icon: '🚩' },
-  { path: '/chat', label: 'Command', icon: '▸' },
-  { path: '/brief', label: 'New Project', icon: '+' },
+const navGroups = [
+  {
+    label: 'Project',
+    items: [
+      { path: '/dashboard', label: 'Dashboard', icon: '◈' },
+      { path: '/rooms', label: 'Rooms', icon: '▦' },
+      { path: '/decisions', label: 'Decisions', icon: '⚖' },
+      { path: '/meetings', label: 'Meetings', icon: '📅' },
+      { path: '/alerts', label: 'Alerts', icon: '🚩' },
+    ],
+  },
+  {
+    label: 'Layers',
+    items: [
+      { path: '/intelligence', label: 'Intelligence', icon: '🧠' },
+      { path: '/visibility', label: 'Visibility', icon: '👁' },
+      { path: '/predictive', label: 'Predictive', icon: '🔮' },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [
+      { path: '/chat', label: 'Command', icon: '▸' },
+      { path: '/brief', label: 'New Project', icon: '+' },
+    ],
+  },
 ];
 
 export function AppSidebar() {
@@ -28,24 +45,33 @@ export function AppSidebar() {
         </Link>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-display transition-colors ${
-                isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-              }`}
-            >
-              <span className="text-base">{item.icon}</span>
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
+        {navGroups.map((group) => (
+          <div key={group.label}>
+            <div className="px-3 py-1 text-[10px] font-display text-muted-foreground/50 uppercase tracking-widest">
+              {group.label}
+            </div>
+            <div className="space-y-0.5 mt-1">
+              {group.items.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-display transition-colors ${
+                      isActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                    }`}
+                  >
+                    <span className="text-base">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       <div className="p-3 border-t border-border">

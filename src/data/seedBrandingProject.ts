@@ -1,5 +1,6 @@
 import { Project, ProjectIntelligence } from '@/types/project';
 import { brandingDecisions, brandingMeetings, brandingScopeChanges, brandingRedFlags } from './seedDecisions';
+import { brandingSnapshots } from './seedSnapshots';
 
 const brandingIntelligence: ProjectIntelligence = {
   assumptions: [
@@ -54,6 +55,7 @@ export const seedBrandingProject: Project = {
   scopeChanges: brandingScopeChanges,
   redFlags: brandingRedFlags,
   intelligence: brandingIntelligence,
+  historicalSnapshots: brandingSnapshots,
   teamMembers: [
     { id: 'tm-b1', name: 'Amara Osei', role: 'Creative Director', roomIds: ['room-brand-design', 'room-brand-strategy'], lastUpdate: '2026-04-07' },
     { id: 'tm-b2', name: 'David Mensah', role: 'Graphic Designer', roomIds: ['room-brand-design'], lastUpdate: '2026-04-06' },

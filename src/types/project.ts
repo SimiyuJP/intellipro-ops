@@ -20,6 +20,7 @@ export interface Project {
   scopeChanges: ScopeChange[];
   redFlags: RedFlag[];
   intelligence?: ProjectIntelligence;
+  historicalSnapshots?: HistoricalSnapshot[];
 }
 
 export interface Room {
@@ -206,4 +207,56 @@ export interface Signal {
   roomId?: string;
   timestamp: string;
   impactScore: number; // 0-100, how much this affects delivery
+}
+
+// Visibility Layer
+
+export interface HistoricalSnapshot {
+  date: string;
+  weekLabel: string; // e.g. "Week 1", "Week 2"
+  healthScore: number;
+  healthStatus: HealthStatus;
+  completedDeliverables: number;
+  totalDeliverables: number;
+  activeBlockers: number;
+  confidence: number;
+  burnRate: number; // dollars spent that week
+  forecastedDelivery: string;
+  note?: string;
+  rooms: {
+    id: string;
+    name: string;
+    healthScore: number;
+    healthStatus: HealthStatus;
+    confidence: number;
+    blockers: number;
+    completedDeliverables: number;
+    totalDeliverables: number;
+  }[];
+}
+
+// Predictive Layer
+
+export interface DeliveryForecast {
+  p50Date: string; // 50% probability date
+  p70Date: string;
+  p95Date: string;
+  currentVelocity: number; // deliverables per week
+  requiredVelocity: number;
+  remainingWork: number; // deliverables left
+  completedWork: number;
+  weeksElapsed: number;
+  weeksRemaining: number;
+  onTrackProbability: number; // 0-100
+}
+
+export interface PatternMatch {
+  projectName: string;
+  similarity: number; // 0-100
+  week: number;
+  outcome: 'slipped' | 'delivered_on_time' | 'delivered_early';
+  slipDays?: number;
+  warningPattern: string;
+  recommendation: string;
+  riskFactors: string[];
 }
