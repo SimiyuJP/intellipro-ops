@@ -1,5 +1,57 @@
-import { Project } from '@/types/project';
+import { Project, ProjectIntelligence } from '@/types/project';
 import { seoDecisions, seoMeetings, seoScopeChanges, seoRedFlags } from './seedDecisions';
+
+const seoIntelligence: ProjectIntelligence = {
+  assumptions: [
+    {
+      id: 'a-1', statement: 'Ahrefs API will be available within 1 week of request', category: 'dependency',
+      status: 'broken', confidence: 10, owner: 'Marcus Webb', createdAt: '2026-03-26',
+      brokenAt: '2026-04-03', impact: 'critical',
+      impactDescription: 'Blocks Ahrefs integration and downstream dashboard features',
+      roomIds: ['room-tech'], linkedDeliverables: ['d-3', 'd-4', 'd-5'], evidence: 'Procurement says 2-3 week lead time',
+    },
+    {
+      id: 'a-2', statement: 'Current team has capacity to deliver all tech deliverables', category: 'resource',
+      status: 'broken', confidence: 15, owner: 'Alex Chen', createdAt: '2026-03-26',
+      brokenAt: '2026-04-01', impact: 'high',
+      impactDescription: 'AI Insights Engine requires ML expertise not on team',
+      roomIds: ['room-tech'], linkedDeliverables: ['d-5'],
+    },
+    {
+      id: 'a-3', statement: 'GA4 API has sufficient data access for dashboard needs', category: 'technical',
+      status: 'active', confidence: 65, owner: 'Alex Chen', createdAt: '2026-03-26',
+      impact: 'high', impactDescription: 'If GA4 data is insufficient, dashboard value proposition weakens',
+      roomIds: ['room-tech'], linkedDeliverables: ['d-2', 'd-4'],
+    },
+    {
+      id: 'a-4', statement: 'Marketing positioning can be finalized without product screenshots', category: 'dependency',
+      status: 'active', confidence: 40, owner: 'Jordan Blake', createdAt: '2026-03-28',
+      impact: 'medium', impactDescription: 'Landing page copy needs real product visuals for credibility',
+      roomIds: ['room-marketing'], linkedDeliverables: ['d-7'],
+    },
+    {
+      id: 'a-5', statement: 'User interviews will validate PMF within 10 conversations', category: 'market',
+      status: 'active', confidence: 55, owner: 'Priya Patel', createdAt: '2026-03-27',
+      impact: 'medium', impactDescription: 'If PMF not validated, product direction may need pivot',
+      roomIds: ['room-research'], linkedDeliverables: ['d-9', 'd-10'],
+    },
+    {
+      id: 'a-6', statement: 'Design can be handled without a dedicated designer', category: 'resource',
+      status: 'broken', confidence: 5, owner: 'Marcus Webb', createdAt: '2026-03-25',
+      brokenAt: '2026-04-05', impact: 'critical',
+      impactDescription: 'No designer means no brand assets, no UI mockups, blocks marketing and tech',
+      roomIds: ['room-design', 'room-marketing'], linkedDeliverables: ['d-13', 'd-14', 'd-7'],
+    },
+  ],
+  driftSnapshots: [
+    { date: '2026-03-25', plannedPercent: 0, actualPercent: 0 },
+    { date: '2026-04-01', plannedPercent: 16.7, actualPercent: 8.2 },
+    { date: '2026-04-08', plannedPercent: 33.3, actualPercent: 15.5 },
+    { date: '2026-04-13', plannedPercent: 45.2, actualPercent: 21.3 },
+  ],
+  plannedVelocity: 16.7,
+  signals: [],
+};
 
 export const seedProject: Project = {
   id: 'proj-001',
@@ -14,6 +66,7 @@ export const seedProject: Project = {
   meetings: seoMeetings,
   scopeChanges: seoScopeChanges,
   redFlags: seoRedFlags,
+  intelligence: seoIntelligence,
   teamMembers: [
     { id: 'tm-1', name: 'Alex Chen', role: 'Tech Lead', roomIds: ['room-tech'], lastUpdate: '2026-04-02' },
     { id: 'tm-2', name: 'Sarah Kim', role: 'Frontend Developer', roomIds: ['room-tech'], lastUpdate: '2026-04-07' },

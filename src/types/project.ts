@@ -19,6 +19,7 @@ export interface Project {
   meetings: Meeting[];
   scopeChanges: ScopeChange[];
   redFlags: RedFlag[];
+  intelligence?: ProjectIntelligence;
 }
 
 export interface Room {
@@ -162,4 +163,47 @@ export interface RedFlag {
   roomId?: string;
   detectedAt: string;
   acknowledged: boolean;
+}
+
+// Intelligence Layer
+
+export interface Assumption {
+  id: string;
+  statement: string;
+  category: 'technical' | 'resource' | 'timeline' | 'market' | 'dependency' | 'budget';
+  status: 'active' | 'validated' | 'broken' | 'retired';
+  confidence: number; // 0-100
+  owner: string;
+  createdAt: string;
+  validatedAt?: string;
+  brokenAt?: string;
+  impact: 'critical' | 'high' | 'medium' | 'low';
+  impactDescription: string;
+  roomIds: string[];
+  linkedDeliverables: string[];
+  evidence?: string;
+}
+
+export interface DriftSnapshot {
+  date: string;
+  plannedPercent: number;
+  actualPercent: number;
+}
+
+export interface ProjectIntelligence {
+  assumptions: Assumption[];
+  driftSnapshots: DriftSnapshot[];
+  plannedVelocity: number; // expected % per week
+  signals: Signal[];
+}
+
+export interface Signal {
+  id: string;
+  type: 'blocker_added' | 'blocker_resolved' | 'deliverable_completed' | 'deliverable_overdue' | 'milestone_at_risk' | 'confidence_drop' | 'assumption_broken' | 'scope_added' | 'member_silent' | 'drift_warning';
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  roomId?: string;
+  timestamp: string;
+  impactScore: number; // 0-100, how much this affects delivery
 }

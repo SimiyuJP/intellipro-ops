@@ -1,5 +1,44 @@
-import { Project } from '@/types/project';
+import { Project, ProjectIntelligence } from '@/types/project';
 import { brandingDecisions, brandingMeetings, brandingScopeChanges, brandingRedFlags } from './seedDecisions';
+
+const brandingIntelligence: ProjectIntelligence = {
+  assumptions: [
+    {
+      id: 'ba-1', statement: 'CEO will review and approve positioning within 3 days', category: 'dependency',
+      status: 'active', confidence: 35, owner: 'Kofi Asante', createdAt: '2026-03-22',
+      impact: 'high', impactDescription: 'Delays voice & tone guide and downstream launch content',
+      roomIds: ['room-brand-strategy'], linkedDeliverables: ['bd-6'],
+    },
+    {
+      id: 'ba-2', statement: 'Brand design team can handle collateral in parallel', category: 'resource',
+      status: 'active', confidence: 60, owner: 'Amara Osei', createdAt: '2026-03-21',
+      impact: 'medium', impactDescription: 'If David is overloaded, social templates and icon set will slip',
+      roomIds: ['room-brand-design', 'room-brand-content'], linkedDeliverables: ['bd-4', 'bd-8'],
+    },
+    {
+      id: 'ba-3', statement: 'Email templates can be built by existing team', category: 'resource',
+      status: 'broken', confidence: 10, owner: 'Kofi Asante', createdAt: '2026-03-23',
+      brokenAt: '2026-04-06', impact: 'medium',
+      impactDescription: 'No HTML email developer on team. Need to contract out.',
+      roomIds: ['room-brand-content'], linkedDeliverables: ['bd-10'],
+      evidence: 'No team member has HTML email expertise',
+    },
+    {
+      id: 'ba-4', statement: 'PR contacts will be confirmed 1 week before launch', category: 'dependency',
+      status: 'active', confidence: 50, owner: 'Kofi Asante', createdAt: '2026-03-25',
+      impact: 'high', impactDescription: 'Without PR, launch visibility drops significantly',
+      roomIds: ['room-brand-launch'], linkedDeliverables: ['bd-12'],
+    },
+  ],
+  driftSnapshots: [
+    { date: '2026-03-20', plannedPercent: 0, actualPercent: 0 },
+    { date: '2026-03-27', plannedPercent: 25, actualPercent: 18 },
+    { date: '2026-04-03', plannedPercent: 50, actualPercent: 38 },
+    { date: '2026-04-10', plannedPercent: 75, actualPercent: 52 },
+  ],
+  plannedVelocity: 25,
+  signals: [],
+};
 
 export const seedBrandingProject: Project = {
   id: 'proj-002',
@@ -14,6 +53,7 @@ export const seedBrandingProject: Project = {
   meetings: brandingMeetings,
   scopeChanges: brandingScopeChanges,
   redFlags: brandingRedFlags,
+  intelligence: brandingIntelligence,
   teamMembers: [
     { id: 'tm-b1', name: 'Amara Osei', role: 'Creative Director', roomIds: ['room-brand-design', 'room-brand-strategy'], lastUpdate: '2026-04-07' },
     { id: 'tm-b2', name: 'David Mensah', role: 'Graphic Designer', roomIds: ['room-brand-design'], lastUpdate: '2026-04-06' },
