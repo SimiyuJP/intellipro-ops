@@ -18,6 +18,8 @@ const navGroups = [
       { path: '/intelligence', label: 'Intelligence', icon: '🧠' },
       { path: '/visibility', label: 'Visibility', icon: '👁' },
       { path: '/predictive', label: 'Predictive', icon: '🔮' },
+      { path: '/accountability', label: 'Accountability', icon: '🤝' },
+      { path: '/memory', label: 'Memory', icon: '📋' },
     ],
   },
   {

@@ -21,6 +21,7 @@ export interface Project {
   redFlags: RedFlag[];
   intelligence?: ProjectIntelligence;
   historicalSnapshots?: HistoricalSnapshot[];
+  commitments?: Commitment[];
 }
 
 export interface Room {
@@ -259,4 +260,29 @@ export interface PatternMatch {
   warningPattern: string;
   recommendation: string;
   riskFactors: string[];
+}
+
+// Accountability Layer
+
+export interface Commitment {
+  id: string;
+  person: string;
+  promise: string;
+  dueDate: string;       // promised delivery date
+  madeAt: string;        // date promise was made
+  source: string;        // meeting title, update, or chat
+  roomId?: string;
+  deliverableId?: string;
+  status: 'pending' | 'delivered' | 'missed' | 'partial';
+  deliveredAt?: string;
+  note?: string;         // PM-only context
+}
+
+// Institutional Memory
+
+export interface PostMortemLesson {
+  category: 'what_worked' | 'what_failed' | 'bottleneck' | 'missed_assumption' | 'lesson';
+  text: string;
+  evidence?: string;
+  roomId?: string;
 }

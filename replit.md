@@ -40,6 +40,8 @@ npm run build
 - **Intelligence Layer** (`/intelligence`) — Drift detection, assumption tracking, signal feed
 - **Visibility Layer** (`/visibility`) — Stakeholder Lens toggle (CEO/Tech Lead/Finance views), Timeline Replay (project state scrubber), Dependency Graph (SVG deliverable map with critical chain)
 - **Predictive Layer** (`/predictive`) — Delivery Forecast (P50/P70/P95 dates, velocity vs required), Risk Heatmap (room-level risk scoring), Pattern Matching (match current project against historical project outcomes)
+- **Accountability Layer** (`/accountability`) — Silence Detector (room/person update staleness with last-known blocker context), Commitment Tracking (PM-only promise-vs-delivery ratios per person), Escalation Triggers (auto-detected: stale blockers, unowned deliverables, low confidence, silent rooms, overdue milestones)
+- **Institutional Memory** (`/memory`) — Post-Mortem Generator (auto-analyzes blockers, scope changes, commitments, assumptions → structured retrospective), Decision Replay (search-driven decision log with full context, alternatives rejected, and broken assumption warnings)
 
 ## Data Files
 

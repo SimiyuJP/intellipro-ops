@@ -1,6 +1,7 @@
 import { Project, ProjectIntelligence } from '@/types/project';
 import { seoDecisions, seoMeetings, seoScopeChanges, seoRedFlags } from './seedDecisions';
 import { seoSnapshots } from './seedSnapshots';
+import { seoCommitments } from './seedCommitments';
 
 const seoIntelligence: ProjectIntelligence = {
   assumptions: [
@@ -69,6 +70,7 @@ export const seedProject: Project = {
   redFlags: seoRedFlags,
   intelligence: seoIntelligence,
   historicalSnapshots: seoSnapshots,
+  commitments: seoCommitments,
   teamMembers: [
     { id: 'tm-1', name: 'Alex Chen', role: 'Tech Lead', roomIds: ['room-tech'], lastUpdate: '2026-04-02' },
     { id: 'tm-2', name: 'Sarah Kim', role: 'Frontend Developer', roomIds: ['room-tech'], lastUpdate: '2026-04-07' },

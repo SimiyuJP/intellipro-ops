@@ -16,6 +16,8 @@ import AlertsPage from "./pages/AlertsPage";
 import IntelligencePage from "./pages/IntelligencePage";
 import VisibilityPage from "./pages/VisibilityPage";
 import PredictivePage from "./pages/PredictivePage";
+import AccountabilityPage from "./pages/AccountabilityPage";
+import MemoryPage from "./pages/MemoryPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +42,8 @@ const App = () => (
             <Route path="/intelligence" element={<IntelligencePage />} />
             <Route path="/visibility" element={<VisibilityPage />} />
             <Route path="/predictive" element={<PredictivePage />} />
+            <Route path="/accountability" element={<AccountabilityPage />} />
+            <Route path="/memory" element={<MemoryPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
