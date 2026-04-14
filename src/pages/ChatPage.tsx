@@ -2,160 +2,28 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/AppLayout';
 import { useProject } from '@/contexts/ProjectContext';
-import { ChatMessage, Project } from '@/types/project';
+import { ChatMessage } from '@/types/project';
 import { FileUpload, UploadedFile } from '@/components/FileUpload';
-import { computeDrift, analyzeAssumptions, generateSignals, filterSignals } from '@/lib/intelligence';
+import { generateResponse } from '@/lib/chatEngine';
 
 const quickCommands = [
-  { cmd: '/status', label: 'Project Status' },
+  { cmd: '/status', label: 'Status' },
   { cmd: '/blockers', label: 'Blockers' },
   { cmd: '/risks', label: 'Risks' },
-  { cmd: '/confidence', label: 'Confidence' },
-  { cmd: '/decisions', label: 'Decisions' },
-  { cmd: '/red-flags', label: 'Red Flags' },
-  { cmd: '/scope-creep', label: 'Scope Creep' },
+  { cmd: '/who-is-lagging', label: "Who's Lagging" },
+  { cmd: '/team', label: 'Team' },
+  { cmd: '/next', label: 'Priorities' },
+  { cmd: '/report', label: 'Weekly Report' },
   { cmd: '/drift', label: 'Drift' },
+  { cmd: '/milestones', label: 'Milestones' },
+  { cmd: '/scope', label: 'Scope' },
+  { cmd: '/decisions', label: 'Decisions' },
   { cmd: '/assumptions', label: 'Assumptions' },
   { cmd: '/signals', label: 'Signals' },
-  { cmd: '/who-is-lagging', label: 'Who\'s Lagging' },
-  { cmd: '/next', label: 'Next Priorities' },
-  { cmd: '/weekly-report', label: 'Weekly Report' },
-  { cmd: '/projects', label: 'List Projects' },
+  { cmd: '/projects', label: 'Projects' },
+  { cmd: '/help', label: 'Help' },
 ];
 
-function generateResponse(input: string, project: Project | null, projects: Project[], switchProject: (id: string | null) => void): string {
-  const q = input.toLowerCase().trim();
-
-  // /projects command
-  if (q === '/projects') {
-    return `**Available Projects:**\n\n${projects.map((p, i) => `${i + 1}. **${p.name}** — ${p.healthStatus.toUpperCase()} (${p.healthScore}%) ${p.id === project?.id ? '← ACTIVE' : ''}`).join('\n')}\n\nTo switch, type: \`/switch <project name>\``;
-  }
-
-  // /switch command
-  if (q.startsWith('/switch ')) {
-    const name = input.slice(8).trim().toLowerCase();
-    const match = projects.find(p => p.name.toLowerCase().includes(name));
-    if (match) {
-      switchProject(match.id);
-      return `✅ Switched active project to **${match.name}**.\n\nAll data now scoped to this project. Ask me anything about it.`;
-    }
-    return `❌ No project found matching "${input.slice(8).trim()}".\n\nAvailable projects:\n${projects.map(p => `• ${p.name}`).join('\n')}\n\nTry: \`/switch ${projects[0].name}\``;
-  }
-
-  // No project selected guard
-  if (!project) {
-    return `⚠️ **No project selected.** Please choose an active project from the sidebar, or type \`/projects\` to list available projects and \`/switch <name>\` to activate one.`;
-  }
-
-  if (q === '/status' || q.includes('where are we') || q.includes('status')) {
-    return `**Project: ${project.name}**\n**Health: ${project.healthStatus.toUpperCase()} (${project.healthScore}%)**\n\n**Critical Blockers:**\n${project.blockers.filter(b => b.severity === 'critical').map(b => `• ${b.title} — Owner: ${b.owner}`).join('\n') || '• None'}\n\n**Room Health:**\n${project.rooms.map(r => `• ${r.icon} ${r.name}: ${r.healthStatus.toUpperCase()} (${r.healthScore}%)`).join('\n')}\n\n**Team Members:**\n${project.teamMembers.map(t => `• ${t.name} (${t.role}) — last update: ${t.lastUpdate}`).join('\n')}\n\n**Milestones:**\n${project.milestones.map(m => `• ${m.title} — ${m.dueDate} [${m.status.replace('_', ' ').toUpperCase()}]`).join('\n')}`;
-  }
-
-  if (q === '/blockers' || q.includes('blocked') || q.includes('blocker')) {
-    if (project.blockers.length === 0) return `**${project.name}** — No active blockers! 🎉`;
-    return `**Active Blockers in ${project.name} (${project.blockers.length})**\n\n${project.blockers.map(b => {
-      const room = project.rooms.find(r => r.id === b.roomId);
-      return `**${b.severity.toUpperCase()}** — ${b.title}\n  Room: ${room?.name} · Owner: ${b.owner}\n  ${b.description}`;
-    }).join('\n\n')}`;
-  }
-
-  if (q === '/risks' || q.includes('risk') || q.includes('deadline')) {
-    const overdueCount = project.rooms.flatMap(r => r.deliverables).filter(d => d.status !== 'done' && new Date(d.dueDate) < new Date()).length;
-    const unstaffedRooms = project.rooms.filter(r => r.teamMembers.length === 0);
-    return `**Risk Assessment — ${project.name}**\n\n${project.blockers.filter(b => b.severity === 'critical').length > 0 ? `🔴 **HIGH RISK: Critical Blockers**\n${project.blockers.filter(b => b.severity === 'critical').map(b => `• ${b.title}`).join('\n')}\n\n` : ''}${overdueCount > 0 ? `🔴 **Overdue Items:** ${overdueCount} deliverables past due date\n\n` : ''}${unstaffedRooms.length > 0 ? `🟡 **Staffing Gaps:** ${unstaffedRooms.map(r => r.name).join(', ')} rooms have no team members\n\n` : ''}**Deadline:** ${project.deadline}\n**Budget:** ${project.budget}`;
-  }
-
-  if (q === '/who-is-lagging' || q.includes('lagging') || q.includes('follow up')) {
-    const today = new Date();
-    const lagging = project.teamMembers.filter(tm => {
-      if (!tm.lastUpdate) return true;
-      const diff = (today.getTime() - new Date(tm.lastUpdate).getTime()) / (1000 * 60 * 60 * 24);
-      return diff > 3;
-    });
-    const unstaffed = project.rooms.filter(r => r.teamMembers.length === 0);
-    let report = `**Accountability Report — ${project.name}**\n\n`;
-    if (lagging.length > 0) {
-      report += lagging.map(tm => `⚠️ **${tm.name}** (${tm.role})\nLast update: ${tm.lastUpdate || 'Never'}`).join('\n\n');
-    } else {
-      report += '✅ All team members have recent updates.\n';
-    }
-    if (unstaffed.length > 0) {
-      report += `\n\n⚠️ **Unstaffed Rooms:** ${unstaffed.map(r => `${r.icon} ${r.name}`).join(', ')}`;
-    }
-    return report;
-  }
-
-  if (q === '/confidence' || q.includes('confidence')) {
-    return `**Confidence Scoring — ${project.name}**\n\nHealth ≠ Confidence. Health shows current status. Confidence shows how much we *trust* that status.\n\n${project.rooms.map(r => {
-      const flag = r.healthStatus === 'green' && r.confidence < 60 ? ' ⚠️ GREEN BUT LOW CONFIDENCE' : '';
-      return `**${r.icon} ${r.name}**: Health ${r.healthStatus.toUpperCase()} (${r.healthScore}%) · Confidence **${r.confidence}%**${flag}\n${r.confidenceFactors.map(f => `  → ${f.label}: ${f.score}% — ${f.reason}`).join('\n')}`;
-    }).join('\n\n')}`;
-  }
-
-  if (q === '/decisions' || q.includes('decision') || q.includes('why did we') || q.includes('why are we')) {
-    if (project.decisions.length === 0) return `**${project.name}** — No decisions logged yet.`;
-    return `**Decision Log — ${project.name}** (${project.decisions.length} recorded)\n\n${project.decisions.map(d => {
-      const room = project.rooms.find(r => r.id === d.roomId);
-      return `**${d.title}** [${d.status.toUpperCase()}]\n  Room: ${room?.name} · Decided by: ${d.decidedBy} · Approved by: ${d.approvedBy} · ${d.date}\n  ${d.description}\n  Rejected: ${d.alternativesRejected.join('; ')}\n  Assumptions: ${d.assumptions.join('; ')}`;
-    }).join('\n\n')}`;
-  }
-
-  if (q === '/red-flags' || q.includes('red flag') || q.includes('alert')) {
-    if (project.redFlags.length === 0) return `**${project.name}** — No red flags detected. ✅`;
-    const critical = project.redFlags.filter(f => f.severity === 'critical');
-    const warnings = project.redFlags.filter(f => f.severity === 'warning');
-    return `**🚩 Red Flag Alerts — ${project.name}** (${project.redFlags.length} active)\n\n${critical.length > 0 ? `**CRITICAL (${critical.length}):**\n${critical.map(f => `🔴 ${f.title}\n  ${f.description}`).join('\n\n')}\n\n` : ''}${warnings.length > 0 ? `**WARNINGS (${warnings.length}):**\n${warnings.map(f => `🟡 ${f.title}\n  ${f.description}`).join('\n\n')}` : ''}`;
-  }
-
-  if (q === '/scope-creep' || q.includes('scope')) {
-    if (project.scopeChanges.length === 0) return `**${project.name}** — No scope changes recorded.`;
-    const added = project.scopeChanges.filter(sc => sc.type === 'added');
-    const noTradeoff = added.filter(sc => !sc.hasTradeoff);
-    return `**Scope Creep Analysis — ${project.name}**\n\n**Changes This Period:** ${project.scopeChanges.length} total\n• Added: ${added.length}\n• Removed: ${project.scopeChanges.filter(sc => sc.type === 'removed').length}\n• Modified: ${project.scopeChanges.filter(sc => sc.type === 'modified').length}\n\n${noTradeoff.length > 0 ? `⚠️ **SCOPE CREEP ALERT:** ${noTradeoff.length} item${noTradeoff.length > 1 ? 's' : ''} added without deadline/budget adjustment:\n${noTradeoff.map(sc => `• ${sc.description} — added by ${sc.addedBy} on ${sc.date}`).join('\n')}\n\n` : '✅ All scope changes have recorded tradeoffs.\n\n'}**Full Log:**\n${project.scopeChanges.map(sc => `${sc.type === 'added' ? '+' : sc.type === 'removed' ? '−' : '~'} ${sc.description} (${sc.date})${sc.hasTradeoff ? ` ✓ Tradeoff: ${sc.tradeoffNote}` : ' ⚠ No tradeoff'}`).join('\n')}`;
-  }
-
-  if (q === '/drift' || q.includes('drift') || q.includes('behind') || q.includes('on track') || q.includes('pace')) {
-    const drift = computeDrift(project);
-    return `**📐 Drift Detection — ${project.name}**\n\n**Status: ${drift.status.replace('_', ' ').toUpperCase()}**\n\n• Actual: **${drift.currentPercent}%** · Expected: **${drift.expectedPercent}%**\n• Gap: **${drift.driftPercent > 0 ? '-' : '+'}${Math.abs(drift.driftPercent)}%** (${drift.driftDays > 0 ? `${drift.driftDays} days behind` : 'on time'})\n• Velocity: **${drift.velocityPerWeek}%/week** (need ${drift.requiredVelocityPerWeek}%/week)\n• Projected completion: **${drift.projectedCompletionDate}**\n• Deadline: **${drift.deadline}**${drift.willMissDeadline ? '\n\n🔴 **AT CURRENT PACE, THIS PROJECT WILL MISS ITS DEADLINE.**' : '\n\n✅ On track to meet deadline.'}\n\n${drift.summary}`;
-  }
-
-  if (q === '/assumptions' || q.includes('assumption')) {
-    const analysis = analyzeAssumptions(project);
-    const assumptions = project.intelligence?.assumptions ?? [];
-    if (assumptions.length === 0) return `**${project.name}** — No assumptions tracked yet.`;
-    return `**🧪 Assumption Tracker — ${project.name}** (${analysis.total} tracked)\n\n• Active: ${analysis.active} · Validated: ${analysis.validated} · Broken: ${analysis.broken}\n\n${analysis.criticalBroken.length > 0 ? `**🔴 BROKEN (Critical/High):**\n${analysis.criticalBroken.map(a => `• **${a.statement}**\n  Impact: ${a.impactDescription}\n  Broken: ${a.brokenAt}`).join('\n\n')}\n\n` : ''}${analysis.unvalidated.length > 0 ? `**⚠️ LOW CONFIDENCE (<50%):**\n${analysis.unvalidated.map(a => `• ${a.statement} — ${a.confidence}% confidence\n  ${a.impactDescription}`).join('\n\n')}` : '✅ All active assumptions have ≥50% confidence.'}`;
-  }
-
-  if (q === '/signals' || q.includes('signal') || q.includes('what matters') || q.includes('noise')) {
-    const signals = filterSignals(generateSignals(project));
-    if (signals.length === 0) return `**${project.name}** — No high-impact signals detected. ✅`;
-    return `**📡 Signal Feed — ${project.name}** (${signals.length} signals above threshold)\n\nRanked by delivery impact:\n\n${signals.slice(0, 8).map((s, i) => `${i + 1}. **${s.title}** [Impact: ${s.impactScore}]\n   ${s.severity.toUpperCase()} · ${s.description}`).join('\n\n')}`;
-  }
-
-  if (q === '/next' || q.includes('priorit') || q.includes('next')) {
-    const notDone = project.rooms.flatMap(r => r.deliverables).filter(d => d.status !== 'done').sort((a, b) => {
-      const p: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
-      return (p[a.priority] ?? 4) - (p[b.priority] ?? 4);
-    });
-    return `**Next Priorities — ${project.name}**\n\n${notDone.slice(0, 5).map((d, i) => `${i + 1}. **${d.title}** — Owner: ${d.owner}\n   Priority: ${d.priority.toUpperCase()} · Due: ${d.dueDate} · Status: ${d.status.replace('_', ' ')}`).join('\n\n')}`;
-  }
-
-  if (q === '/weekly-report' || q.includes('weekly') || q.includes('report') || q.includes('summary') || q.includes('ceo')) {
-    const done = project.rooms.flatMap(r => r.deliverables).filter(d => d.status === 'done');
-    const inProg = project.rooms.flatMap(r => r.deliverables).filter(d => d.status === 'in_progress');
-    const blockedD = project.rooms.flatMap(r => r.deliverables).filter(d => d.status === 'blocked');
-    const total = project.rooms.flatMap(r => r.deliverables).length;
-    return `**Weekly Status Report — ${project.name}**\n*Generated ${new Date().toLocaleDateString()}*\n\n---\n\n**Overall: ${project.healthStatus.toUpperCase()} (${project.healthScore}%)**\n\n**Progress:** ${done.length}/${total} deliverables complete (${Math.round(done.length / total * 100)}%)\n• In Progress: ${inProg.length}\n• Blocked: ${blockedD.length}\n\n**Room Status:**\n${project.rooms.map(r => `• ${r.icon} ${r.name}: ${r.healthStatus.toUpperCase()} (${r.healthScore}%)`).join('\n')}\n\n**Active Blockers:**\n${project.blockers.map(b => `• ${b.title} (${b.severity})`).join('\n') || '• None'}\n\n**Team:**\n${project.teamMembers.map(t => `• ${t.name} — ${t.role}`).join('\n')}\n\n---\n*Report scoped to: ${project.name} (${project.id})*`;
-  }
-
-  // Room-specific queries
-  const roomMatch = project.rooms.find(r => q.includes(`room ${r.name.toLowerCase()}`));
-  if (roomMatch) {
-    return `**${roomMatch.name} Room Status — ${project.name}: ${roomMatch.healthStatus.toUpperCase()} (${roomMatch.healthScore}%)**\n\n**Objective:** ${roomMatch.objective}\n\n**Deliverables:**\n${roomMatch.deliverables.map(d => `• ${d.status === 'done' ? '✅' : d.status === 'blocked' ? '🔴' : d.status === 'in_progress' ? '🟡' : '⚪'} ${d.title} — ${d.owner} (due ${d.dueDate})`).join('\n')}\n\n${roomMatch.blockers.length > 0 ? `**Blockers:**\n${roomMatch.blockers.map(b => `• ${b.title}: ${b.description}`).join('\n')}\n\n` : ''}**AI Recommendations:**\n${roomMatch.recommendations.map(r => `→ ${r}`).join('\n')}`;
-  }
-
-  return `**Project: ${project.name}** (${project.id})\nHealth: **${project.healthStatus.toUpperCase()} (${project.healthScore}%)**\nRooms: ${project.rooms.length} · Blockers: ${project.blockers.length} · Team: ${project.teamMembers.length}\n\nTry: \`/status\`, \`/blockers\`, \`/risks\`, \`/who-is-lagging\`, \`/next\`, \`/weekly-report\`\nOr: \`/projects\`, \`/switch <name>\``;
-}
 
 export default function ChatPage() {
   const { activeProject, activeProjectId, projects, setActiveProjectId, getChatMessages, setChatMessages } = useProject();

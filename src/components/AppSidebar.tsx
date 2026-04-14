@@ -8,6 +8,7 @@ const navGroups = [
       { path: '/dashboard', label: 'Home', icon: '◈' },
       { path: '/about', label: 'Overview', icon: '▦' },
       { path: '/rooms', label: 'Rooms', icon: '⬡' },
+      { path: '/people', label: 'People', icon: '👤' },
       { path: '/decisions', label: 'Decisions', icon: '⚖' },
       { path: '/meetings', label: 'Meetings', icon: '📅' },
       { path: '/alerts', label: 'Alerts', icon: '🚩' },
@@ -27,6 +28,7 @@ const navGroups = [
     label: 'Tools',
     items: [
       { path: '/chat', label: 'Command', icon: '▸' },
+      { path: '/report', label: 'Report', icon: '📄' },
       { path: '/brief', label: 'New Project', icon: '+' },
     ],
   },
