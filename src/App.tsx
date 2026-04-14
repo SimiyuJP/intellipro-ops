@@ -19,6 +19,7 @@ import AlertsPage from "./pages/AlertsPage";
 import IntelligencePage from "./pages/IntelligencePage";
 import VisibilityPage from "./pages/VisibilityPage";
 import PredictivePage from "./pages/PredictivePage";
+import AboutPage from "./pages/AboutPage";
 import AccountabilityPage from "./pages/AccountabilityPage";
 import MemoryPage from "./pages/MemoryPage";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/intelligence" element={<ProtectedRoute><IntelligencePage /></ProtectedRoute>} />
               <Route path="/visibility" element={<ProtectedRoute><VisibilityPage /></ProtectedRoute>} />
               <Route path="/predictive" element={<ProtectedRoute><PredictivePage /></ProtectedRoute>} />
+              <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
               <Route path="/accountability" element={<ProtectedRoute><AccountabilityPage /></ProtectedRoute>} />
               <Route path="/memory" element={<ProtectedRoute><MemoryPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />

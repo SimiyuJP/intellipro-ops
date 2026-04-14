@@ -5,8 +5,9 @@ const navGroups = [
   {
     label: 'Project',
     items: [
-      { path: '/dashboard', label: 'Dashboard', icon: '◈' },
-      { path: '/rooms', label: 'Rooms', icon: '▦' },
+      { path: '/dashboard', label: 'Home', icon: '◈' },
+      { path: '/about', label: 'Overview', icon: '▦' },
+      { path: '/rooms', label: 'Rooms', icon: '⬡' },
       { path: '/decisions', label: 'Decisions', icon: '⚖' },
       { path: '/meetings', label: 'Meetings', icon: '📅' },
       { path: '/alerts', label: 'Alerts', icon: '🚩' },
