@@ -436,7 +436,7 @@ function PatternMatching() {
             <div className="text-xs text-muted-foreground mt-1">Similar projects slipped</div>
           </div>
           <div>
-            <div className="text-2xl font-display font-bold text-health-green">{patterns.filter(p => p.outcome === 'delivered_on_time' || p.outcome === 'delivered_early').length}</div>
+            <div className="text-2xl font-display font-bold text-health-green">{patterns.filter(p => ['delivered_on_time', 'delivered_early'].includes(p.outcome)).length}</div>
             <div className="text-xs text-muted-foreground mt-1">Delivered on time</div>
           </div>
           <div>
