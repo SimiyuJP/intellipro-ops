@@ -633,7 +633,7 @@ function DependencyGraph() {
                     {n.roomIcon} {n.room}
                   </text>
                   <foreignObject x={8} y={18} width={116} height={22}>
-                    <div xmlns="http://www.w3.org/1999/xhtml" style={{ fontSize: 10, color: '#e5e7eb', lineHeight: '11px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    <div style={{ fontSize: 10, color: '#e5e7eb', lineHeight: '11px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
                       {n.title}
                     </div>
                   </foreignObject>
