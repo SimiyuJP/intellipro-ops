@@ -173,8 +173,8 @@ function buildIndex(project: Project): SearchResult[] {
       id: `mtg-${m.id}`,
       type: 'meeting',
       title: m.title,
-      subtitle: `${m.date} · ${m.participants.slice(0, 3).join(', ')}${m.participants.length > 3 ? ` +${m.participants.length - 3}` : ''}`,
-      meta: m.summary,
+      subtitle: `${m.date} · ${(m.attendees ?? []).slice(0, 3).join(', ')}${(m.attendees ?? []).length > 3 ? ` +${(m.attendees ?? []).length - 3}` : ''}`,
+      meta: m.minutes ?? '',
       url: '/meetings',
       icon: '📅',
     });
