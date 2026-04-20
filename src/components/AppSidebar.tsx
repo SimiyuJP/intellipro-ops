@@ -28,7 +28,8 @@ const navGroups = [
   {
     label: 'Tools',
     items: [
-      { path: '/chat', label: 'Command', icon: '▸' },
+      { path: '/chat', label: 'Messages', icon: '💬' },
+      { path: '/command', label: 'Command', icon: '▸' },
       { path: '/report', label: 'Report', icon: '📄' },
       { path: '/brief', label: 'New Project', icon: '+' },
     ],

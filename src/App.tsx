@@ -11,6 +11,7 @@ import DashboardPage from "./pages/DashboardPage";
 import RoomsPage from "./pages/RoomsPage";
 import RoomDetailPage from "./pages/RoomDetailPage";
 import ChatPage from "./pages/ChatPage";
+import CommandPage from "./pages/CommandPage";
 import BriefPage from "./pages/BriefPage";
 import AuthPage from "./pages/AuthPage";
 import DecisionsPage from "./pages/DecisionsPage";
@@ -47,6 +48,8 @@ const App = () => (
               <Route path="/rooms" element={<ProtectedRoute><RoomsPage /></ProtectedRoute>} />
               <Route path="/rooms/:roomId" element={<ProtectedRoute><RoomDetailPage /></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+              <Route path="/chat/:conversationId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+              <Route path="/command" element={<ProtectedRoute><CommandPage /></ProtectedRoute>} />
               <Route path="/decisions" element={<ProtectedRoute><DecisionsPage /></ProtectedRoute>} />
               <Route path="/meetings" element={<ProtectedRoute><MeetingsPage /></ProtectedRoute>} />
               <Route path="/alerts" element={<ProtectedRoute><AlertsPage /></ProtectedRoute>} />
